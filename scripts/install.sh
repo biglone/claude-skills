@@ -1,20 +1,26 @@
 #!/bin/bash
 
-# Claude Skills 安装脚本
-# 用法: curl -fsSL https://raw.githubusercontent.com/<user>/claude-skills/main/scripts/install.sh | bash
+# AI Coding Skills 安装脚本
+# 支持 Claude Code 和 OpenAI Codex CLI
+# 用法: curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
 
 set -e
 
 # 配置
-REPO_URL="${CLAUDE_SKILLS_REPO:-https://github.com/biglone/claude-skills.git}"
-SKILLS_DIR="$HOME/.claude/skills"
+REPO_URL="${SKILLS_REPO:-https://github.com/biglone/claude-skills.git}"
+CLAUDE_SKILLS_DIR="$HOME/.claude/skills"
+CODEX_SKILLS_DIR="$HOME/.codex/skills"
 TEMP_DIR=$(mktemp -d)
+
+# 安装目标 (claude, codex, both)
+INSTALL_TARGET="${INSTALL_TARGET:-}"
 
 # 颜色输出
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+CYAN='\033[0;36m'
+NC='\033[0m'
 
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
@@ -28,13 +34,11 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# 清理临时目录
 cleanup() {
     rm -rf "$TEMP_DIR"
 }
 trap cleanup EXIT
 
-# 检查 git 是否安装
 check_git() {
     if ! command -v git &> /dev/null; then
         log_error "Git 未安装，请先安装 Git"
@@ -42,85 +46,141 @@ check_git() {
     fi
 }
 
-# 创建 skills 目录
-create_skills_dir() {
-    if [ ! -d "$SKILLS_DIR" ]; then
-        log_info "创建 skills 目录: $SKILLS_DIR"
-        mkdir -p "$SKILLS_DIR"
+select_target() {
+    # 如果已设置环境变量，直接使用
+    if [ -n "$INSTALL_TARGET" ]; then
+        return
+    fi
+
+    echo -e "${CYAN}请选择安装目标:${NC}"
+    echo "  1) Claude Code"
+    echo "  2) OpenAI Codex CLI"
+    echo "  3) 两者都安装"
+    echo ""
+    read -p "请输入选项 [1-3] (默认: 3): " choice
+
+    case "$choice" in
+        1) INSTALL_TARGET="claude" ;;
+        2) INSTALL_TARGET="codex" ;;
+        3|"") INSTALL_TARGET="both" ;;
+        *)
+            log_warn "无效选项，默认安装到两者"
+            INSTALL_TARGET="both"
+            ;;
+    esac
+}
+
+create_skills_dirs() {
+    if [ "$INSTALL_TARGET" = "claude" ] || [ "$INSTALL_TARGET" = "both" ]; then
+        if [ ! -d "$CLAUDE_SKILLS_DIR" ]; then
+            log_info "创建 Claude Code skills 目录: $CLAUDE_SKILLS_DIR"
+            mkdir -p "$CLAUDE_SKILLS_DIR"
+        fi
+    fi
+
+    if [ "$INSTALL_TARGET" = "codex" ] || [ "$INSTALL_TARGET" = "both" ]; then
+        if [ ! -d "$CODEX_SKILLS_DIR" ]; then
+            log_info "创建 Codex CLI skills 目录: $CODEX_SKILLS_DIR"
+            mkdir -p "$CODEX_SKILLS_DIR"
+        fi
     fi
 }
 
-# 克隆仓库
 clone_repo() {
     log_info "克隆 skills 仓库..."
-    git clone --depth 1 "$REPO_URL" "$TEMP_DIR/claude-skills" 2>/dev/null || {
+    git clone --depth 1 "$REPO_URL" "$TEMP_DIR/skills-repo" 2>/dev/null || {
         log_error "克隆仓库失败，请检查仓库地址: $REPO_URL"
         exit 1
     }
 }
 
-# 安装 skills
+install_skills_to_dir() {
+    local target_dir="$1"
+    local target_name="$2"
+    local source_dir="$TEMP_DIR/skills-repo/skills"
+
+    log_info "安装 skills 到 $target_name..."
+
+    for skill in "$source_dir"/*; do
+        if [ -d "$skill" ]; then
+            skill_name=$(basename "$skill")
+            skill_target="$target_dir/$skill_name"
+
+            if [ -d "$skill_target" ]; then
+                log_warn "[$target_name] Skill '$skill_name' 已存在，跳过"
+            else
+                cp -r "$skill" "$target_dir/"
+                log_info "[$target_name] 已安装: $skill_name"
+            fi
+        fi
+    done
+}
+
 install_skills() {
-    local source_dir="$TEMP_DIR/claude-skills/skills"
+    local source_dir="$TEMP_DIR/skills-repo/skills"
 
     if [ ! -d "$source_dir" ]; then
         log_error "skills 目录不存在"
         exit 1
     fi
 
-    log_info "安装 skills..."
+    if [ "$INSTALL_TARGET" = "claude" ] || [ "$INSTALL_TARGET" = "both" ]; then
+        install_skills_to_dir "$CLAUDE_SKILLS_DIR" "Claude Code"
+    fi
 
-    for skill in "$source_dir"/*; do
-        if [ -d "$skill" ]; then
-            skill_name=$(basename "$skill")
-            target_dir="$SKILLS_DIR/$skill_name"
-
-            if [ -d "$target_dir" ]; then
-                log_warn "Skill '$skill_name' 已存在，跳过"
-            else
-                cp -r "$skill" "$SKILLS_DIR/"
-                log_info "已安装: $skill_name"
-            fi
-        fi
-    done
+    if [ "$INSTALL_TARGET" = "codex" ] || [ "$INSTALL_TARGET" = "both" ]; then
+        install_skills_to_dir "$CODEX_SKILLS_DIR" "Codex CLI"
+    fi
 }
 
-# 显示已安装的 skills
 show_installed() {
+    local skills_dir="$1"
+    local name="$2"
+
+    if [ ! -d "$skills_dir" ]; then
+        return
+    fi
+
     echo ""
-    log_info "已安装的 Skills:"
-    echo "─────────────────────────────────"
-    for skill in "$SKILLS_DIR"/*; do
+    log_info "$name 已安装的 Skills:"
+    echo "─────────────────────────────────────────"
+    for skill in "$skills_dir"/*; do
         if [ -d "$skill" ] && [ -f "$skill/SKILL.md" ]; then
             skill_name=$(basename "$skill")
-            # 提取 description
-            desc=$(grep -A1 "^description:" "$skill/SKILL.md" 2>/dev/null | head -1 | sed 's/description: //')
+            desc=$(grep "^description:" "$skill/SKILL.md" 2>/dev/null | head -1 | sed 's/description: //')
             echo "  • $skill_name"
             if [ -n "$desc" ]; then
                 echo "    $desc"
             fi
         fi
     done
-    echo "─────────────────────────────────"
-    echo ""
-    log_info "请重启 Claude Code 以加载新的 Skills"
+    echo "─────────────────────────────────────────"
 }
 
-# 主函数
 main() {
     echo ""
-    echo "╔═══════════════════════════════════════╗"
-    echo "║     Claude Skills 安装程序            ║"
-    echo "╚═══════════════════════════════════════╝"
+    echo "╔═══════════════════════════════════════════╗"
+    echo "║     AI Coding Skills 安装程序             ║"
+    echo "║     支持 Claude Code / Codex CLI          ║"
+    echo "╚═══════════════════════════════════════════╝"
     echo ""
 
     check_git
-    create_skills_dir
+    select_target
+    create_skills_dirs
     clone_repo
     install_skills
-    show_installed
 
-    log_info "安装完成!"
+    if [ "$INSTALL_TARGET" = "claude" ] || [ "$INSTALL_TARGET" = "both" ]; then
+        show_installed "$CLAUDE_SKILLS_DIR" "Claude Code"
+    fi
+
+    if [ "$INSTALL_TARGET" = "codex" ] || [ "$INSTALL_TARGET" = "both" ]; then
+        show_installed "$CODEX_SKILLS_DIR" "Codex CLI"
+    fi
+
+    echo ""
+    log_info "安装完成! 请重启对应的 AI 编程工具以加载 Skills"
 }
 
 main "$@"

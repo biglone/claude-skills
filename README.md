@@ -1,6 +1,13 @@
-# Claude Skills 集合
+# AI Coding Skills 集合
 
-一个可共享的 Claude Code Skills 仓库，方便团队成员和多设备快速安装使用。
+一个可共享的 AI 编程助手 Skills 仓库，支持 **Claude Code** 和 **OpenAI Codex CLI**，方便团队成员和多设备快速安装使用。
+
+## 支持的平台
+
+| 平台 | Skills 目录 |
+|------|-------------|
+| Claude Code | `~/.claude/skills/` |
+| OpenAI Codex CLI | `~/.codex/skills/` |
 
 ## 包含的 Skills
 
@@ -14,6 +21,8 @@
 
 ## 快速安装
 
+运行安装脚本后，会提示选择安装目标（Claude Code / Codex CLI / 两者都安装）。
+
 ### macOS / Linux
 
 ```bash
@@ -26,18 +35,53 @@ curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/
 irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
 ```
 
+### 静默安装（跳过交互）
+
+通过环境变量指定安装目标：
+
+**macOS / Linux:**
+```bash
+# 只安装到 Claude Code
+INSTALL_TARGET=claude curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
+
+# 只安装到 Codex CLI
+INSTALL_TARGET=codex curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
+
+# 两者都安装
+INSTALL_TARGET=both curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
+```
+
+**Windows:**
+```powershell
+# 只安装到 Claude Code
+$env:INSTALL_TARGET="claude"; irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
+
+# 只安装到 Codex CLI
+$env:INSTALL_TARGET="codex"; irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
+```
+
 ### 手动安装
 
 **macOS / Linux:**
 ```bash
 git clone https://github.com/biglone/claude-skills.git
+
+# Claude Code
 cp -r claude-skills/skills/* ~/.claude/skills/
+
+# Codex CLI
+cp -r claude-skills/skills/* ~/.codex/skills/
 ```
 
 **Windows:**
 ```powershell
 git clone https://github.com/biglone/claude-skills.git
+
+# Claude Code
 Copy-Item -Recurse claude-skills\skills\* $env:USERPROFILE\.claude\skills\
+
+# Codex CLI
+Copy-Item -Recurse claude-skills\skills\* $env:USERPROFILE\.codex\skills\
 ```
 
 ## 更新 Skills
@@ -107,7 +151,7 @@ allowed-tools: Read, Grep, Glob
 ```
 
 3. 提交并推送到仓库
-4. 其他人运行 `update.sh` 即可获取
+4. 其他人运行更新脚本即可获取
 
 ## 贡献指南
 

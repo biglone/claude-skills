@@ -1,12 +1,14 @@
-# Claude Skills 安装脚本 (Windows PowerShell)
+# AI Coding Skills 安装脚本 (Windows PowerShell)
+# 支持 Claude Code 和 OpenAI Codex CLI
 # 用法: irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
 
 $ErrorActionPreference = "Stop"
 
 # 配置
-$RepoUrl = if ($env:CLAUDE_SKILLS_REPO) { $env:CLAUDE_SKILLS_REPO } else { "https://github.com/biglone/claude-skills.git" }
-$SkillsDir = Join-Path $env:USERPROFILE ".claude\skills"
-$TempDir = Join-Path $env:TEMP "claude-skills-$(Get-Random)"
+$RepoUrl = if ($env:SKILLS_REPO) { $env:SKILLS_REPO } else { "https://github.com/biglone/claude-skills.git" }
+$ClaudeSkillsDir = Join-Path $env:USERPROFILE ".claude\skills"
+$CodexSkillsDir = Join-Path $env:USERPROFILE ".codex\skills"
+$TempDir = Join-Path $env:TEMP "ai-skills-$(Get-Random)"
 
 function Write-Info { param($Message) Write-Host "[INFO] $Message" -ForegroundColor Green }
 function Write-Warn { param($Message) Write-Host "[WARN] $Message" -ForegroundColor Yellow }
@@ -21,11 +23,84 @@ function Test-Git {
     }
 }
 
+function Select-Target {
+    if ($env:INSTALL_TARGET) {
+        return $env:INSTALL_TARGET
+    }
+
+    Write-Host ""
+    Write-Host "请选择安装目标:" -ForegroundColor Cyan
+    Write-Host "  1) Claude Code"
+    Write-Host "  2) OpenAI Codex CLI"
+    Write-Host "  3) 两者都安装"
+    Write-Host ""
+
+    $choice = Read-Host "请输入选项 [1-3] (默认: 3)"
+
+    switch ($choice) {
+        "1" { return "claude" }
+        "2" { return "codex" }
+        "3" { return "both" }
+        "" { return "both" }
+        default { return "both" }
+    }
+}
+
+function Install-SkillsToDir {
+    param($TargetDir, $TargetName, $SourceDir)
+
+    if (-not (Test-Path $TargetDir)) {
+        Write-Info "创建 $TargetName skills 目录: $TargetDir"
+        New-Item -ItemType Directory -Path $TargetDir -Force | Out-Null
+    }
+
+    Write-Info "安装 skills 到 $TargetName..."
+
+    Get-ChildItem -Path $SourceDir -Directory | ForEach-Object {
+        $SkillName = $_.Name
+        $SkillTarget = Join-Path $TargetDir $SkillName
+
+        if (Test-Path $SkillTarget) {
+            Write-Warn "[$TargetName] Skill '$SkillName' 已存在，跳过"
+        } else {
+            Copy-Item -Path $_.FullName -Destination $TargetDir -Recurse
+            Write-Info "[$TargetName] 已安装: $SkillName"
+        }
+    }
+}
+
+function Show-Installed {
+    param($SkillsDir, $Name)
+
+    if (-not (Test-Path $SkillsDir)) { return }
+
+    Write-Host ""
+    Write-Info "$Name 已安装的 Skills:"
+    Write-Host "─────────────────────────────────────────"
+
+    Get-ChildItem -Path $SkillsDir -Directory | ForEach-Object {
+        $SkillFile = Join-Path $_.FullName "SKILL.md"
+        if (Test-Path $SkillFile) {
+            $SkillName = $_.Name
+            Write-Host "  • $SkillName" -ForegroundColor White
+
+            $Content = Get-Content $SkillFile -Raw
+            if ($Content -match 'description:\s*(.+)') {
+                $Desc = $Matches[1].Trim()
+                Write-Host "    $Desc" -ForegroundColor Gray
+            }
+        }
+    }
+
+    Write-Host "─────────────────────────────────────────"
+}
+
 function Main {
     Write-Host ""
-    Write-Host "╔═══════════════════════════════════════╗" -ForegroundColor Cyan
-    Write-Host "║     Claude Skills 安装程序            ║" -ForegroundColor Cyan
-    Write-Host "╚═══════════════════════════════════════╝" -ForegroundColor Cyan
+    Write-Host "╔═══════════════════════════════════════════╗" -ForegroundColor Cyan
+    Write-Host "║     AI Coding Skills 安装程序             ║" -ForegroundColor Cyan
+    Write-Host "║     支持 Claude Code / Codex CLI          ║" -ForegroundColor Cyan
+    Write-Host "╚═══════════════════════════════════════════╝" -ForegroundColor Cyan
     Write-Host ""
 
     # 检查 Git
@@ -34,11 +109,8 @@ function Main {
         exit 1
     }
 
-    # 创建 skills 目录
-    if (-not (Test-Path $SkillsDir)) {
-        Write-Info "创建 skills 目录: $SkillsDir"
-        New-Item -ItemType Directory -Path $SkillsDir -Force | Out-Null
-    }
+    # 选择目标
+    $Target = Select-Target
 
     # 克隆仓库
     Write-Info "克隆 skills 仓库..."
@@ -49,7 +121,6 @@ function Main {
         exit 1
     }
 
-    # 安装 skills
     $SourceDir = Join-Path $TempDir "skills"
 
     if (-not (Test-Path $SourceDir)) {
@@ -57,48 +128,29 @@ function Main {
         exit 1
     }
 
-    Write-Info "安装 skills..."
-
-    Get-ChildItem -Path $SourceDir -Directory | ForEach-Object {
-        $SkillName = $_.Name
-        $TargetDir = Join-Path $SkillsDir $SkillName
-
-        if (Test-Path $TargetDir) {
-            Write-Warn "Skill '$SkillName' 已存在，跳过"
-        } else {
-            Copy-Item -Path $_.FullName -Destination $SkillsDir -Recurse
-            Write-Info "已安装: $SkillName"
-        }
+    # 安装 skills
+    if ($Target -eq "claude" -or $Target -eq "both") {
+        Install-SkillsToDir -TargetDir $ClaudeSkillsDir -TargetName "Claude Code" -SourceDir $SourceDir
     }
 
-    # 显示已安装的 skills
-    Write-Host ""
-    Write-Info "已安装的 Skills:"
-    Write-Host "─────────────────────────────────────────"
-
-    Get-ChildItem -Path $SkillsDir -Directory | ForEach-Object {
-        $SkillFile = Join-Path $_.FullName "SKILL.md"
-        if (Test-Path $SkillFile) {
-            $SkillName = $_.Name
-            Write-Host "  • $SkillName" -ForegroundColor White
-
-            # 提取 description
-            $Content = Get-Content $SkillFile -Raw
-            if ($Content -match 'description:\s*(.+)') {
-                $Desc = $Matches[1].Trim()
-                Write-Host "    $Desc" -ForegroundColor Gray
-            }
-        }
+    if ($Target -eq "codex" -or $Target -eq "both") {
+        Install-SkillsToDir -TargetDir $CodexSkillsDir -TargetName "Codex CLI" -SourceDir $SourceDir
     }
 
-    Write-Host "─────────────────────────────────────────"
-    Write-Host ""
-    Write-Info "请重启 Claude Code 以加载新的 Skills"
+    # 显示已安装
+    if ($Target -eq "claude" -or $Target -eq "both") {
+        Show-Installed -SkillsDir $ClaudeSkillsDir -Name "Claude Code"
+    }
+
+    if ($Target -eq "codex" -or $Target -eq "both") {
+        Show-Installed -SkillsDir $CodexSkillsDir -Name "Codex CLI"
+    }
 
     # 清理
     Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
 
-    Write-Info "安装完成!"
+    Write-Host ""
+    Write-Info "安装完成! 请重启对应的 AI 编程工具以加载 Skills"
 }
 
 Main
