@@ -5,6 +5,8 @@ $ErrorActionPreference = "Stop"
 
 $ClaudeSkillsDir = Join-Path $env:USERPROFILE ".claude\skills"
 $CodexSkillsDir = Join-Path $env:USERPROFILE ".codex\skills"
+$ClaudeWorkflowsDir = Join-Path $env:USERPROFILE ".claude\workflows"
+$CodexWorkflowsDir = Join-Path $env:USERPROFILE ".codex\workflows"
 
 function Write-Info { param($Message) Write-Host "[INFO] $Message" -ForegroundColor Green }
 function Write-Warn { param($Message) Write-Host "[WARN] $Message" -ForegroundColor Yellow }
@@ -64,6 +66,17 @@ $SkillsToRemove = @(
     "autonomous-dev"
     "auto-code-pipeline"
     "auto-fix-loop"
+    "requirements-doc"
+)
+
+$WorkflowsToRemove = @(
+    "full-auto-development"
+    "code-review-flow"
+    "feature-development"
+    "content-creation"
+    "weekly-planning"
+    "learning-path"
+    "project-kickoff"
 )
 
 function Select-Target {
@@ -104,6 +117,21 @@ function Uninstall-FromDir {
     }
 }
 
+function Uninstall-WorkflowsFromDir {
+    param($TargetDir, $TargetName)
+
+    foreach ($Workflow in $WorkflowsToRemove) {
+        $WorkflowPath = Join-Path $TargetDir $Workflow
+
+        if (Test-Path $WorkflowPath) {
+            Remove-Item -Path $WorkflowPath -Recurse -Force
+            Write-Info "[$TargetName] 已卸载 workflow: $Workflow"
+        } else {
+            Write-Warn "[$TargetName] Workflow '$Workflow' 不存在，跳过"
+        }
+    }
+}
+
 function Main {
     Write-Host ""
     Write-Host "╔═══════════════════════════════════════════╗" -ForegroundColor Cyan
@@ -115,10 +143,12 @@ function Main {
 
     if ($Target -eq "claude" -or $Target -eq "both") {
         Uninstall-FromDir -TargetDir $ClaudeSkillsDir -TargetName "Claude Code"
+        Uninstall-WorkflowsFromDir -TargetDir $ClaudeWorkflowsDir -TargetName "Claude Code"
     }
 
     if ($Target -eq "codex" -or $Target -eq "both") {
         Uninstall-FromDir -TargetDir $CodexSkillsDir -TargetName "Codex CLI"
+        Uninstall-WorkflowsFromDir -TargetDir $CodexWorkflowsDir -TargetName "Codex CLI"
     }
 
     Write-Host ""

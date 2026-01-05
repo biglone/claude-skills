@@ -8,6 +8,8 @@ $ErrorActionPreference = "Stop"
 $RepoUrl = if ($env:SKILLS_REPO) { $env:SKILLS_REPO } else { "https://github.com/biglone/claude-skills.git" }
 $ClaudeSkillsDir = Join-Path $env:USERPROFILE ".claude\skills"
 $CodexSkillsDir = Join-Path $env:USERPROFILE ".codex\skills"
+$ClaudeWorkflowsDir = Join-Path $env:USERPROFILE ".claude\workflows"
+$CodexWorkflowsDir = Join-Path $env:USERPROFILE ".codex\workflows"
 $TempDir = Join-Path $env:TEMP "ai-skills-$(Get-Random)"
 
 # 更新模式 (ask, skip, force)
@@ -97,6 +99,40 @@ function Install-SkillsToDir {
     }
 }
 
+function Install-WorkflowsToDir {
+    param($TargetDir, $TargetName, $SourceDir)
+
+    if (-not (Test-Path $SourceDir)) {
+        Write-Warn "workflows 目录不存在，跳过"
+        return
+    }
+
+    if (-not (Test-Path $TargetDir)) {
+        Write-Info "创建 $TargetName workflows 目录: $TargetDir"
+        New-Item -ItemType Directory -Path $TargetDir -Force | Out-Null
+    }
+
+    Write-Info "安装 workflows 到 $TargetName..."
+
+    Get-ChildItem -Path $SourceDir -Directory | ForEach-Object {
+        $WorkflowName = $_.Name
+        $WorkflowTarget = Join-Path $TargetDir $WorkflowName
+
+        if (Test-Path $WorkflowTarget) {
+            if (Test-ShouldUpdate -SkillName $WorkflowName -TargetName $TargetName) {
+                Remove-Item -Path $WorkflowTarget -Recurse -Force
+                Copy-Item -Path $_.FullName -Destination $TargetDir -Recurse
+                Write-Info "[$TargetName] 已更新 workflow: $WorkflowName"
+            } else {
+                Write-Warn "[$TargetName] 跳过 workflow: $WorkflowName"
+            }
+        } else {
+            Copy-Item -Path $_.FullName -Destination $TargetDir -Recurse
+            Write-Info "[$TargetName] 已安装 workflow: $WorkflowName"
+        }
+    }
+}
+
 function Show-Installed {
     param($SkillsDir, $Name)
 
@@ -150,6 +186,7 @@ function Main {
     }
 
     $SourceDir = Join-Path $TempDir "skills"
+    $WorkflowsSourceDir = Join-Path $TempDir "workflows"
 
     if (-not (Test-Path $SourceDir)) {
         Write-Err "skills 目录不存在"
@@ -159,10 +196,12 @@ function Main {
     # 安装 skills
     if ($Target -eq "claude" -or $Target -eq "both") {
         Install-SkillsToDir -TargetDir $ClaudeSkillsDir -TargetName "Claude Code" -SourceDir $SourceDir
+        Install-WorkflowsToDir -TargetDir $ClaudeWorkflowsDir -TargetName "Claude Code" -SourceDir $WorkflowsSourceDir
     }
 
     if ($Target -eq "codex" -or $Target -eq "both") {
         Install-SkillsToDir -TargetDir $CodexSkillsDir -TargetName "Codex CLI" -SourceDir $SourceDir
+        Install-WorkflowsToDir -TargetDir $CodexWorkflowsDir -TargetName "Codex CLI" -SourceDir $WorkflowsSourceDir
     }
 
     # 显示已安装

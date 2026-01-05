@@ -7,6 +7,8 @@ set -e
 
 CLAUDE_SKILLS_DIR="$HOME/.claude/skills"
 CODEX_SKILLS_DIR="$HOME/.codex/skills"
+CLAUDE_WORKFLOWS_DIR="$HOME/.claude/workflows"
+CODEX_WORKFLOWS_DIR="$HOME/.codex/workflows"
 
 UNINSTALL_TARGET="${UNINSTALL_TARGET:-}"
 
@@ -74,6 +76,17 @@ SKILLS_TO_REMOVE=(
     "autonomous-dev"
     "auto-code-pipeline"
     "auto-fix-loop"
+    "requirements-doc"
+)
+
+WORKFLOWS_TO_REMOVE=(
+    "full-auto-development"
+    "code-review-flow"
+    "feature-development"
+    "content-creation"
+    "weekly-planning"
+    "learning-path"
+    "project-kickoff"
 )
 
 select_target() {
@@ -118,6 +131,21 @@ uninstall_from_dir() {
     done
 }
 
+uninstall_workflows_from_dir() {
+    local target_dir="$1"
+    local target_name="$2"
+
+    for workflow in "${WORKFLOWS_TO_REMOVE[@]}"; do
+        workflow_path="$target_dir/$workflow"
+        if [ -d "$workflow_path" ]; then
+            rm -rf "$workflow_path"
+            log_info "[$target_name] 已卸载 workflow: $workflow"
+        else
+            log_warn "[$target_name] Workflow '$workflow' 不存在，跳过"
+        fi
+    done
+}
+
 main() {
     echo ""
     echo "╔═══════════════════════════════════════════╗"
@@ -129,10 +157,12 @@ main() {
 
     if [ "$UNINSTALL_TARGET" = "claude" ] || [ "$UNINSTALL_TARGET" = "both" ]; then
         uninstall_from_dir "$CLAUDE_SKILLS_DIR" "Claude Code"
+        uninstall_workflows_from_dir "$CLAUDE_WORKFLOWS_DIR" "Claude Code"
     fi
 
     if [ "$UNINSTALL_TARGET" = "codex" ] || [ "$UNINSTALL_TARGET" = "both" ]; then
         uninstall_from_dir "$CODEX_SKILLS_DIR" "Codex CLI"
+        uninstall_workflows_from_dir "$CODEX_WORKFLOWS_DIR" "Codex CLI"
     fi
 
     echo ""

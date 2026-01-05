@@ -8,6 +8,8 @@ set -e
 REPO_URL="${SKILLS_REPO:-https://github.com/biglone/claude-skills.git}"
 CLAUDE_SKILLS_DIR="$HOME/.claude/skills"
 CODEX_SKILLS_DIR="$HOME/.codex/skills"
+CLAUDE_WORKFLOWS_DIR="$HOME/.claude/workflows"
+CODEX_WORKFLOWS_DIR="$HOME/.codex/workflows"
 TEMP_DIR=$(mktemp -d)
 
 UPDATE_TARGET="${UPDATE_TARGET:-}"
@@ -77,6 +79,36 @@ update_skills_in_dir() {
     done
 }
 
+update_workflows_in_dir() {
+    local target_dir="$1"
+    local target_name="$2"
+    local source_dir="$TEMP_DIR/skills-repo/workflows"
+
+    if [ ! -d "$source_dir" ]; then
+        log_warn "workflows 目录不存在，跳过"
+        return
+    fi
+
+    if [ ! -d "$target_dir" ]; then
+        mkdir -p "$target_dir"
+    fi
+
+    for workflow in "$source_dir"/*; do
+        if [ -d "$workflow" ]; then
+            workflow_name=$(basename "$workflow")
+            workflow_target="$target_dir/$workflow_name"
+
+            if [ -d "$workflow_target" ]; then
+                rm -rf "$workflow_target"
+                log_info "[$target_name] 更新 workflow: $workflow_name"
+            else
+                log_info "[$target_name] 新增 workflow: $workflow_name"
+            fi
+            cp -r "$workflow" "$target_dir/"
+        fi
+    done
+}
+
 main() {
     echo ""
     echo "╔═══════════════════════════════════════════╗"
@@ -99,10 +131,12 @@ main() {
 
     if [ "$UPDATE_TARGET" = "claude" ] || [ "$UPDATE_TARGET" = "both" ]; then
         update_skills_in_dir "$CLAUDE_SKILLS_DIR" "Claude Code"
+        update_workflows_in_dir "$CLAUDE_WORKFLOWS_DIR" "Claude Code"
     fi
 
     if [ "$UPDATE_TARGET" = "codex" ] || [ "$UPDATE_TARGET" = "both" ]; then
         update_skills_in_dir "$CODEX_SKILLS_DIR" "Codex CLI"
+        update_workflows_in_dir "$CODEX_WORKFLOWS_DIR" "Codex CLI"
     fi
 
     echo ""

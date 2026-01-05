@@ -10,6 +10,8 @@ set -e
 REPO_URL="${SKILLS_REPO:-https://github.com/biglone/claude-skills.git}"
 CLAUDE_SKILLS_DIR="$HOME/.claude/skills"
 CODEX_SKILLS_DIR="$HOME/.codex/skills"
+CLAUDE_WORKFLOWS_DIR="$HOME/.claude/workflows"
+CODEX_WORKFLOWS_DIR="$HOME/.codex/workflows"
 TEMP_DIR=$(mktemp -d)
 
 # 安装目标 (claude, codex, both)
@@ -89,12 +91,20 @@ create_skills_dirs() {
             log_info "创建 Claude Code skills 目录: $CLAUDE_SKILLS_DIR"
             mkdir -p "$CLAUDE_SKILLS_DIR"
         fi
+        if [ ! -d "$CLAUDE_WORKFLOWS_DIR" ]; then
+            log_info "创建 Claude Code workflows 目录: $CLAUDE_WORKFLOWS_DIR"
+            mkdir -p "$CLAUDE_WORKFLOWS_DIR"
+        fi
     fi
 
     if [ "$INSTALL_TARGET" = "codex" ] || [ "$INSTALL_TARGET" = "both" ]; then
         if [ ! -d "$CODEX_SKILLS_DIR" ]; then
             log_info "创建 Codex CLI skills 目录: $CODEX_SKILLS_DIR"
             mkdir -p "$CODEX_SKILLS_DIR"
+        fi
+        if [ ! -d "$CODEX_WORKFLOWS_DIR" ]; then
+            log_info "创建 Codex CLI workflows 目录: $CODEX_WORKFLOWS_DIR"
+            mkdir -p "$CODEX_WORKFLOWS_DIR"
         fi
     fi
 }
@@ -177,6 +187,51 @@ install_skills() {
     fi
 }
 
+install_workflows_to_dir() {
+    local target_dir="$1"
+    local target_name="$2"
+    local source_dir="$TEMP_DIR/skills-repo/workflows"
+
+    log_info "安装 workflows 到 $target_name..."
+
+    for workflow in "$source_dir"/*; do
+        if [ -d "$workflow" ]; then
+            workflow_name=$(basename "$workflow")
+            workflow_target="$target_dir/$workflow_name"
+
+            if [ -d "$workflow_target" ]; then
+                if ask_update_skill "$workflow_name" "$target_name"; then
+                    rm -rf "$workflow_target"
+                    cp -r "$workflow" "$target_dir/"
+                    log_info "[$target_name] 已更新 workflow: $workflow_name"
+                else
+                    log_warn "[$target_name] 跳过 workflow: $workflow_name"
+                fi
+            else
+                cp -r "$workflow" "$target_dir/"
+                log_info "[$target_name] 已安装 workflow: $workflow_name"
+            fi
+        fi
+    done
+}
+
+install_workflows() {
+    local source_dir="$TEMP_DIR/skills-repo/workflows"
+
+    if [ ! -d "$source_dir" ]; then
+        log_warn "workflows 目录不存在，跳过"
+        return
+    fi
+
+    if [ "$INSTALL_TARGET" = "claude" ] || [ "$INSTALL_TARGET" = "both" ]; then
+        install_workflows_to_dir "$CLAUDE_WORKFLOWS_DIR" "Claude Code"
+    fi
+
+    if [ "$INSTALL_TARGET" = "codex" ] || [ "$INSTALL_TARGET" = "both" ]; then
+        install_workflows_to_dir "$CODEX_WORKFLOWS_DIR" "Codex CLI"
+    fi
+}
+
 show_installed() {
     local skills_dir="$1"
     local name="$2"
@@ -214,6 +269,7 @@ main() {
     create_skills_dirs
     clone_repo
     install_skills
+    install_workflows
 
     if [ "$INSTALL_TARGET" = "claude" ] || [ "$INSTALL_TARGET" = "both" ]; then
         show_installed "$CLAUDE_SKILLS_DIR" "Claude Code"
