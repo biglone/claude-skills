@@ -14,47 +14,54 @@
 
 ## 快速安装
 
-### 方式一：一键安装脚本
+### macOS / Linux
 
 ```bash
-# 设置仓库地址（替换为你的仓库）
-export CLAUDE_SKILLS_REPO="https://github.com/biglone/claude-skills.git"
-
-# 执行安装
 curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
 ```
 
-### 方式二：手动安装
+### Windows (PowerShell)
 
-```bash
-# 克隆仓库
-git clone https://github.com/biglone/claude-skills.git
-
-# 复制 skills 到本地
-cp -r claude-skills/skills/* ~/.claude/skills/
-
-# 重启 Claude Code
+```powershell
+irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
 ```
 
-### 方式三：选择性安装
+### 手动安装
 
+**macOS / Linux:**
 ```bash
-# 只安装需要的 skill
 git clone https://github.com/biglone/claude-skills.git
-cp -r claude-skills/skills/code-reviewer ~/.claude/skills/
+cp -r claude-skills/skills/* ~/.claude/skills/
+```
+
+**Windows:**
+```powershell
+git clone https://github.com/biglone/claude-skills.git
+Copy-Item -Recurse claude-skills\skills\* $env:USERPROFILE\.claude\skills\
 ```
 
 ## 更新 Skills
 
+**macOS / Linux:**
 ```bash
-export CLAUDE_SKILLS_REPO="https://github.com/biglone/claude-skills.git"
 curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/update.sh | bash
+```
+
+**Windows:**
+```powershell
+irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/update.ps1 | iex
 ```
 
 ## 卸载 Skills
 
+**macOS / Linux:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/uninstall.sh | bash
+```
+
+**Windows:**
+```powershell
+irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/uninstall.ps1 | iex
 ```
 
 ## 目录结构
@@ -74,9 +81,12 @@ claude-skills/
 │   └── test-generator/
 │       └── SKILL.md
 └── scripts/
-    ├── install.sh
+    ├── install.sh      # macOS / Linux
+    ├── install.ps1     # Windows
     ├── update.sh
-    └── uninstall.sh
+    ├── update.ps1
+    ├── uninstall.sh
+    └── uninstall.ps1
 ```
 
 ## 添加新的 Skill
