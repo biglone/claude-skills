@@ -132,3 +132,47 @@ related-skills: auto-code-pipeline, auto-fix-loop, code-reviewer, test-generator
 - "自动完成 {任务描述}"
 - "全自动模式 {任务描述}"
 - "autonomous mode: {任务描述}"
+
+## 断点续传
+
+### 进度记录
+每完成一个阶段，在项目根目录创建 `.claude-progress.json`：
+
+```json
+{
+  "task": "任务描述",
+  "started_at": "2024-01-01T10:00:00Z",
+  "current_stage": 3,
+  "completed_stages": [1, 2],
+  "modified_files": ["src/api.ts", "src/utils.ts"],
+  "notes": "阶段2完成，准备运行测试"
+}
+```
+
+### 中断恢复
+如果会话中断，用户重新连接后说：
+- "继续之前的任务"
+- "resume"
+- "继续"
+
+AI 将：
+1. 读取 `.claude-progress.json`
+2. 显示之前的进度
+3. 从中断点继续执行
+
+### 恢复流程
+```
+用户: 继续
+
+AI: 检测到未完成任务...
+    任务: {任务描述}
+    进度: 阶段 2/5 已完成
+    上次状态: 准备运行测试
+
+    是否继续? (自动继续...)
+
+    [阶段 3/5] 运行测试...
+```
+
+### 完成清理
+任务全部完成后，自动删除 `.claude-progress.json`

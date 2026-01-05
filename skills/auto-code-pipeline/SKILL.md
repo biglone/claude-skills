@@ -107,7 +107,32 @@ cargo test        # Rust
 
 # 完整流程
 "写完代码后自动跑流水线"
+
+# 恢复中断
+"继续流水线"
+"resume pipeline"
 ```
+
+## 断点续传
+
+### 进度记录
+流水线执行中，更新 `.claude-pipeline.json`：
+
+```json
+{
+  "started_at": "2024-01-01T10:00:00Z",
+  "current_step": 2,
+  "steps": ["lint", "test", "review"],
+  "completed": ["lint"],
+  "results": {
+    "lint": {"status": "pass", "fixed": 3}
+  }
+}
+```
+
+### 中断恢复
+重连后说 "继续流水线"：
+- 读取进度，从中断步骤继续
 
 ## 配置选项
 

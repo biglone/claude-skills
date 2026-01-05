@@ -196,4 +196,37 @@ npm run lint → 失败 → eslint --fix → 重试 → ...
 # 自定义
 "运行 {命令} 直到通过"
 "fix loop: {命令}"
+
+# 恢复中断
+"继续修复"
+"resume fix"
 ```
+
+## 断点续传
+
+### 进度记录
+每次修复尝试后，更新 `.claude-fix-progress.json`：
+
+```json
+{
+  "command": "npm test",
+  "started_at": "2024-01-01T10:00:00Z",
+  "attempt": 3,
+  "max_attempts": 10,
+  "fixed_issues": [
+    {"file": "src/api.ts", "line": 42, "issue": "null check"},
+    {"file": "src/utils.ts", "line": 87, "issue": "boundary condition"}
+  ],
+  "remaining_errors": 2,
+  "last_output": "2 tests failed..."
+}
+```
+
+### 中断恢复
+重连后说 "继续修复" 或 "resume fix"：
+1. 读取进度文件
+2. 显示已修复内容
+3. 继续剩余修复
+
+### 完成清理
+全部通过后删除进度文件
