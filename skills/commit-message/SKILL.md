@@ -50,6 +50,16 @@ allowed-tools: Bash
 3. **footer**:
    - 关联 issue: `Closes #123`
    - Breaking change: `BREAKING CHANGE: description`
+   - **禁止添加**: AI 生成标识、Co-Authored-By 等自动签名
+
+## 禁止事项
+
+生成 commit message 时，**绝对不要**添加以下内容：
+- `🤖 Generated with [Claude Code]` 或类似 AI 生成标识
+- `Co-Authored-By: Claude` 或任何 AI 署名
+- 任何表明由 AI 生成的标记或签名
+
+提交信息应该简洁、专业，只包含与代码变更相关的内容。
 
 ## 示例
 
