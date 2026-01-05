@@ -134,14 +134,14 @@ irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install
 
 **macOS / Linux:**
 ```bash
-# 只安装到 Claude Code
-INSTALL_TARGET=claude curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
+# 强制更新所有 skills 到 Claude Code
+curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | UPDATE_MODE=force INSTALL_TARGET=claude bash
 
-# 强制更新所有 skills
-UPDATE_MODE=force curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
+# 强制更新到两个平台
+curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | UPDATE_MODE=force INSTALL_TARGET=both bash
 
 # 跳过已存在的 skills（静默安装）
-UPDATE_MODE=skip INSTALL_TARGET=both curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | UPDATE_MODE=skip INSTALL_TARGET=both bash
 ```
 
 **Windows:**
