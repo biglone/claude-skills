@@ -15,6 +15,12 @@ TEMP_DIR=$(mktemp -d)
 # 安装目标 (claude, codex, both)
 INSTALL_TARGET="${INSTALL_TARGET:-}"
 
+# 更新模式 (ask, skip, force)
+# ask: 询问用户是否更新已存在的 skill (默认)
+# skip: 跳过已存在的 skill
+# force: 强制更新所有 skill
+UPDATE_MODE="${UPDATE_MODE:-ask}"
+
 # 颜色输出
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -47,7 +53,6 @@ check_git() {
 }
 
 select_target() {
-    # 如果已设置环境变量，直接使用
     if [ -n "$INSTALL_TARGET" ]; then
         return
     fi
@@ -94,6 +99,26 @@ clone_repo() {
     }
 }
 
+# 询问用户是否更新单个 skill
+ask_update_skill() {
+    local skill_name="$1"
+    local target_name="$2"
+
+    if [ "$UPDATE_MODE" = "skip" ]; then
+        return 1  # 不更新
+    elif [ "$UPDATE_MODE" = "force" ]; then
+        return 0  # 更新
+    fi
+
+    # ask 模式：询问用户
+    echo ""
+    read -p "[$target_name] Skill '$skill_name' 已存在，是否更新? [y/N]: " answer
+    case "$answer" in
+        [Yy]|[Yy][Ee][Ss]) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 install_skills_to_dir() {
     local target_dir="$1"
     local target_name="$2"
@@ -107,7 +132,13 @@ install_skills_to_dir() {
             skill_target="$target_dir/$skill_name"
 
             if [ -d "$skill_target" ]; then
-                log_warn "[$target_name] Skill '$skill_name' 已存在，跳过"
+                if ask_update_skill "$skill_name" "$target_name"; then
+                    rm -rf "$skill_target"
+                    cp -r "$skill" "$target_dir/"
+                    log_info "[$target_name] 已更新: $skill_name"
+                else
+                    log_warn "[$target_name] 跳过: $skill_name"
+                fi
             else
                 cp -r "$skill" "$target_dir/"
                 log_info "[$target_name] 已安装: $skill_name"

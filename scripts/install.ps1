@@ -10,6 +10,9 @@ $ClaudeSkillsDir = Join-Path $env:USERPROFILE ".claude\skills"
 $CodexSkillsDir = Join-Path $env:USERPROFILE ".codex\skills"
 $TempDir = Join-Path $env:TEMP "ai-skills-$(Get-Random)"
 
+# 更新模式 (ask, skip, force)
+$UpdateMode = if ($env:UPDATE_MODE) { $env:UPDATE_MODE } else { "ask" }
+
 function Write-Info { param($Message) Write-Host "[INFO] $Message" -ForegroundColor Green }
 function Write-Warn { param($Message) Write-Host "[WARN] $Message" -ForegroundColor Yellow }
 function Write-Err { param($Message) Write-Host "[ERROR] $Message" -ForegroundColor Red }
@@ -46,6 +49,25 @@ function Select-Target {
     }
 }
 
+function Test-ShouldUpdate {
+    param($SkillName, $TargetName)
+
+    if ($UpdateMode -eq "skip") {
+        return $false
+    } elseif ($UpdateMode -eq "force") {
+        return $true
+    }
+
+    # ask 模式：询问用户
+    Write-Host ""
+    $answer = Read-Host "[$TargetName] Skill '$SkillName' 已存在，是否更新? [y/N]"
+
+    if ($answer -match "^[Yy]") {
+        return $true
+    }
+    return $false
+}
+
 function Install-SkillsToDir {
     param($TargetDir, $TargetName, $SourceDir)
 
@@ -61,7 +83,13 @@ function Install-SkillsToDir {
         $SkillTarget = Join-Path $TargetDir $SkillName
 
         if (Test-Path $SkillTarget) {
-            Write-Warn "[$TargetName] Skill '$SkillName' 已存在，跳过"
+            if (Test-ShouldUpdate -SkillName $SkillName -TargetName $TargetName) {
+                Remove-Item -Path $SkillTarget -Recurse -Force
+                Copy-Item -Path $_.FullName -Destination $TargetDir -Recurse
+                Write-Info "[$TargetName] 已更新: $SkillName"
+            } else {
+                Write-Warn "[$TargetName] 跳过: $SkillName"
+            }
         } else {
             Copy-Item -Path $_.FullName -Destination $TargetDir -Recurse
             Write-Info "[$TargetName] 已安装: $SkillName"

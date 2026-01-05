@@ -35,20 +35,30 @@ curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/
 irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
 ```
 
-### 静默安装（跳过交互）
+### 环境变量配置
 
-通过环境变量指定安装目标：
+通过环境变量控制安装行为：
+
+| 变量 | 值 | 说明 |
+|------|-----|------|
+| `INSTALL_TARGET` | `claude` / `codex` / `both` | 安装目标平台 |
+| `UPDATE_MODE` | `ask` / `skip` / `force` | 已存在 skill 的处理方式 |
+
+**UPDATE_MODE 说明：**
+- `ask` (默认): 逐个询问是否更新已存在的 skill
+- `skip`: 跳过所有已存在的 skill
+- `force`: 强制更新所有 skill
 
 **macOS / Linux:**
 ```bash
 # 只安装到 Claude Code
 INSTALL_TARGET=claude curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
 
-# 只安装到 Codex CLI
-INSTALL_TARGET=codex curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
+# 强制更新所有 skills
+UPDATE_MODE=force curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
 
-# 两者都安装
-INSTALL_TARGET=both curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
+# 跳过已存在的 skills（静默安装）
+UPDATE_MODE=skip INSTALL_TARGET=both curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
 ```
 
 **Windows:**
@@ -56,8 +66,8 @@ INSTALL_TARGET=both curl -fsSL https://raw.githubusercontent.com/biglone/claude-
 # 只安装到 Claude Code
 $env:INSTALL_TARGET="claude"; irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
 
-# 只安装到 Codex CLI
-$env:INSTALL_TARGET="codex"; irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
+# 强制更新所有 skills
+$env:UPDATE_MODE="force"; irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
 ```
 
 ### 手动安装
