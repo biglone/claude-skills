@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# AI Coding Skills 卸载脚本
+# AI Skills 卸载脚本
 # 支持 Claude Code 和 OpenAI Codex CLI
 
 set -e
@@ -20,6 +20,7 @@ log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 
 SKILLS_TO_REMOVE=(
+    # 编程开发类
     "code-reviewer"
     "commit-message"
     "security-audit"
@@ -38,15 +39,37 @@ SKILLS_TO_REMOVE=(
     "dependency-analyzer"
     "i18n-helper"
     "migration-helper"
+    # 写作与翻译类
     "technical-writer"
     "blog-writer"
     "translator"
+    "email-writer"
+    "presentation-maker"
+    # 数据与分析类
     "data-analyzer"
     "chart-generator"
+    # 学习与知识管理类
     "concept-explainer"
     "tutorial-creator"
+    "note-taker"
+    "knowledge-base"
+    "learning-tracker"
+    # 个人效率类
     "task-planner"
     "meeting-notes"
+    "weekly-review"
+    "goal-setter"
+    "habit-tracker"
+    "decision-maker"
+    # 职业发展类
+    "resume-builder"
+    "interview-helper"
+    "career-planner"
+    "feedback-giver"
+    # 创意思考类
+    "brainstormer"
+    "outline-creator"
+    "mind-mapper"
 )
 
 select_target() {
@@ -87,7 +110,7 @@ uninstall_from_dir() {
 main() {
     echo ""
     echo "╔═══════════════════════════════════════════╗"
-    echo "║     AI Coding Skills 卸载程序             ║"
+    echo "║       AI Skills 卸载程序                  ║"
     echo "╚═══════════════════════════════════════════╝"
     echo ""
 

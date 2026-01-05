@@ -1,4 +1,4 @@
-# AI Coding Skills 卸载脚本 (Windows PowerShell)
+# AI Skills 卸载脚本 (Windows PowerShell)
 # 支持 Claude Code 和 OpenAI Codex CLI
 
 $ErrorActionPreference = "Stop"
@@ -10,6 +10,7 @@ function Write-Info { param($Message) Write-Host "[INFO] $Message" -ForegroundCo
 function Write-Warn { param($Message) Write-Host "[WARN] $Message" -ForegroundColor Yellow }
 
 $SkillsToRemove = @(
+    # 编程开发类
     "code-reviewer"
     "commit-message"
     "security-audit"
@@ -28,15 +29,37 @@ $SkillsToRemove = @(
     "dependency-analyzer"
     "i18n-helper"
     "migration-helper"
+    # 写作与翻译类
     "technical-writer"
     "blog-writer"
     "translator"
+    "email-writer"
+    "presentation-maker"
+    # 数据与分析类
     "data-analyzer"
     "chart-generator"
+    # 学习与知识管理类
     "concept-explainer"
     "tutorial-creator"
+    "note-taker"
+    "knowledge-base"
+    "learning-tracker"
+    # 个人效率类
     "task-planner"
     "meeting-notes"
+    "weekly-review"
+    "goal-setter"
+    "habit-tracker"
+    "decision-maker"
+    # 职业发展类
+    "resume-builder"
+    "interview-helper"
+    "career-planner"
+    "feedback-giver"
+    # 创意思考类
+    "brainstormer"
+    "outline-creator"
+    "mind-mapper"
 )
 
 function Select-Target {
@@ -80,7 +103,7 @@ function Uninstall-FromDir {
 function Main {
     Write-Host ""
     Write-Host "╔═══════════════════════════════════════════╗" -ForegroundColor Cyan
-    Write-Host "║     AI Coding Skills 卸载程序             ║" -ForegroundColor Cyan
+    Write-Host "║       AI Skills 卸载程序                  ║" -ForegroundColor Cyan
     Write-Host "╚═══════════════════════════════════════════╝" -ForegroundColor Cyan
     Write-Host ""
 
