@@ -60,6 +60,10 @@ $SkillsToRemove = @(
     "brainstormer"
     "outline-creator"
     "mind-mapper"
+    # 自动化类
+    "autonomous-dev"
+    "auto-code-pipeline"
+    "auto-fix-loop"
 )
 
 function Select-Target {

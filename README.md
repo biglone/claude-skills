@@ -89,6 +89,14 @@
 | `outline-creator` | 大纲创建和结构化 |
 | `mind-mapper` | 思维导图和可视化思维 |
 
+### 自动化类
+
+| Skill | 描述 |
+|-------|------|
+| `autonomous-dev` | 自主开发模式，自动完成从需求到提交的完整流程 |
+| `auto-code-pipeline` | 自动代码流水线，lint → test → review 自动执行 |
+| `auto-fix-loop` | 自动修复循环，持续修复直到测试/构建通过 |
+
 ## Workflows 工作流
 
 工作流将多个相关的 Skills 串联起来，形成完整的工作流程。

@@ -70,6 +70,10 @@ SKILLS_TO_REMOVE=(
     "brainstormer"
     "outline-creator"
     "mind-mapper"
+    # 自动化类
+    "autonomous-dev"
+    "auto-code-pipeline"
+    "auto-fix-loop"
 )
 
 select_target() {
