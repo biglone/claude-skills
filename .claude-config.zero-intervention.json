@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "description": "零干预模式配置 - 最大化自动化，但不推荐用于生产环境",
+
+  "full_auto_development": {
+    "skip_confirmation": true,
+    "auto_approve_safe_changes": true,
+    "require_manual_review": false
+  },
+
+  "autonomous_dev": {
+    "auto_commit": true,
+    "auto_push": false,
+    "max_retries": 5,
+    "skip_tests": false,
+    "skip_review": false
+  },
+
+  "safety": {
+    "excluded_files": [".env", ".env.*", "credentials.json"],
+    "delete_confirmation_threshold": 999,
+    "require_confirmation": []
+  },
+
+  "git": {
+    "require_hooks": false,
+    "pre_commit_checks": []
+  },
+
+  "ui": {
+    "verbose_mode": false
+  },
+
+  "_warnings": [
+    "此配置跳过大部分确认环节",
+    "适用场景：快速原型、实验项目、个人项目",
+    "不适用场景：生产环境、团队协作、关键项目",
+    "风险：可能生成不符合预期的代码，浪费时间"
+  ]
+}

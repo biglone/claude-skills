@@ -1,0 +1,204 @@
+{
+  "version": "1.0",
+  "description": "安全零干预模式 - 最大化自动化但有严格的安全边界",
+
+  "global": {
+    "log_level": "info",
+    "max_concurrent_tasks": 2,
+    "timeout": 600000
+  },
+
+  "full_auto_development": {
+    "skip_confirmation": true,
+    "auto_approve_safe_changes": true,
+    "require_manual_review": false,
+    "timeout_per_phase": {
+      "requirements": 300,
+      "confirmation": 0,
+      "development": 1800
+    }
+  },
+
+  "autonomous_dev": {
+    "auto_commit": true,
+    "auto_push": false,
+    "max_retries": 3,
+    "skip_tests": false,
+    "skip_review": false
+  },
+
+  "safety": {
+    "sandbox_mode": true,
+    "work_directory_only": true,
+    "excluded_files": [
+      ".env",
+      ".env.*",
+      "credentials.json",
+      "secrets.*",
+      "*.key",
+      "*.pem",
+      "*.crt",
+      ".git/**",
+      "node_modules/**",
+      "dist/**",
+      "build/**"
+    ],
+    "excluded_directories": [
+      "node_modules",
+      ".git",
+      "dist",
+      "build",
+      ".vscode",
+      ".idea"
+    ],
+    "allowed_file_patterns": [
+      "src/**/*",
+      "tests/**/*",
+      "test/**/*",
+      "__tests__/**/*",
+      "components/**/*",
+      "pages/**/*",
+      "api/**/*",
+      "lib/**/*",
+      "utils/**/*",
+      "config/**/*",
+      "*.js",
+      "*.ts",
+      "*.tsx",
+      "*.jsx",
+      "*.css",
+      "*.scss",
+      "*.json",
+      "*.md"
+    ],
+    "forbidden_operations": [
+      "delete_root_files",
+      "modify_git_config",
+      "chmod_executable",
+      "rm_rf",
+      "sudo_commands"
+    ],
+    "constraints": {
+      "max_file_size_mb": 5,
+      "max_files_per_task": 30,
+      "max_files_created": 20,
+      "max_files_deleted": 10,
+      "max_directory_depth": 5,
+      "delete_confirmation_threshold": 5,
+      "max_lines_per_file": 500
+    },
+    "require_confirmation": [],
+    "auto_reject_dangerous_ops": true
+  },
+
+  "scope_limits": {
+    "working_directory": ".",
+    "allowed_paths": [
+      "src",
+      "tests",
+      "test",
+      "__tests__",
+      "components",
+      "pages",
+      "api",
+      "lib",
+      "utils"
+    ],
+    "forbidden_paths": [
+      "/",
+      "../",
+      "~",
+      "/etc",
+      "/usr",
+      "/var",
+      "/System",
+      "C:\\Windows",
+      "C:\\Program Files"
+    ],
+    "path_traversal_prevention": true,
+    "symlink_follow": false
+  },
+
+  "commands": {
+    "test": "npm test",
+    "lint": "npm run lint",
+    "build": "npm run build"
+  },
+
+  "git": {
+    "auto_stage": true,
+    "commit_message_template": "feat: {summary}\n\n{details}\n\n🤖 Generated with Claude Code (Safe Mode)\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>",
+    "branch_naming": "feature/{feature-name}",
+    "require_hooks": false,
+    "pre_commit_checks": [],
+    "auto_create_branch": true,
+    "never_force_push": true,
+    "protect_branches": ["main", "master", "develop", "production"]
+  },
+
+  "monitoring": {
+    "enabled": true,
+    "metrics_file": ".claude-metrics.json",
+    "track_performance": true,
+    "track_errors": true,
+    "track_file_operations": true,
+    "alert_on_limits": true
+  },
+
+  "rollback": {
+    "enabled": true,
+    "auto_create_backup": true,
+    "backup_before_operations": ["delete", "refactor", "major_change"],
+    "keep_backups": 3
+  },
+
+  "ui": {
+    "show_progress_bar": true,
+    "use_emojis": true,
+    "verbose_mode": false,
+    "show_file_operations": true
+  },
+
+  "advanced": {
+    "parallel_execution": false,
+    "cache_enabled": true,
+    "optimize_for_speed": false,
+    "debug_mode": false,
+    "dry_run_first": false
+  },
+
+  "_security_notes": [
+    "【工作范围限制】",
+    "• 只能在当前工作目录内操作",
+    "• 只能修改 allowed_file_patterns 中的文件",
+    "• 禁止访问系统目录和上级目录",
+    "• 禁止操作 .git、node_modules 等目录",
+    "",
+    "【操作限制】",
+    "• 最多创建 20 个文件",
+    "• 最多删除 10 个文件（超过5个会警告）",
+    "• 单文件最大 500 行（防止生成过大文件）",
+    "• 单文件最大 5MB",
+    "• 最多同时处理 30 个文件",
+    "",
+    "【Git 保护】",
+    "• 自动创建功能分支（不在 main 分支直接提交）",
+    "• 禁止 force push",
+    "• 保护 main/master/develop/production 分支",
+    "",
+    "【回滚机制】",
+    "• 删除和重构操作前自动备份",
+    "• 保留最近 3 个备份",
+    "",
+    "【适用场景】",
+    "✅ 个人项目快速开发",
+    "✅ 实验性功能",
+    "✅ 明确范围的小功能",
+    "",
+    "【不适用场景】",
+    "❌ 生产环境",
+    "❌ 需要修改根目录配置文件",
+    "❌ 需要大规模重构",
+    "❌ 团队协作项目（建议保留确认环节）"
+  ]
+}

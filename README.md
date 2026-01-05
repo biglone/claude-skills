@@ -33,6 +33,7 @@
 | `dependency-analyzer` | 依赖分析和安全检查 |
 | `i18n-helper` | 国际化辅助 |
 | `migration-helper` | 数据库迁移和框架升级 |
+| `requirements-doc` | 需求文档生成器，将简单需求转换为结构化文档和任务列表 |
 
 ### 写作与翻译类
 
@@ -103,12 +104,42 @@
 
 | Workflow | 描述 | 包含的 Skills |
 |----------|------|--------------|
+| `full-auto-development` | **全自动开发工作流** | requirements-doc, task-planner, autonomous-dev, auto-code-pipeline, code-reviewer |
 | `code-review-flow` | 代码审查工作流 | code-reviewer, security-audit, bug-finder, refactoring, commit-message, pr-description |
 | `feature-development` | 功能开发工作流 | api-designer, doc-generator, test-generator, code-reviewer, changelog-generator, pr-description |
 | `content-creation` | 内容创作工作流 | brainstormer, outline-creator, blog-writer, technical-writer, translator |
 | `weekly-planning` | 每周规划工作流 | weekly-review, goal-setter, task-planner, habit-tracker, decision-maker |
 | `learning-path` | 学习路径工作流 | goal-setter, learning-tracker, note-taker, knowledge-base, concept-explainer, tutorial-creator |
 | `project-kickoff` | 项目启动工作流 | task-planner, goal-setter, brainstormer, decision-maker, meeting-notes, presentation-maker |
+
+## 📚 完整文档
+
+### 快速开始
+
+- 📖 [**快速开始指南**](./GETTING_STARTED.md) - 5分钟上手全自动开发
+- 🎯 [提示词优化指南](./PROMPT_OPTIMIZATION.md) - 写出更好的需求描述
+- 📋 [项目模板](./TEMPLATES.md) - 不同项目类型的配置模板
+- 🎨 [**技能选择机制**](./SKILL_SELECTION.md) - 如何让 Claude 选择正确的 skill
+- 📂 [**工作目录说明**](./WORKING_DIRECTORY.md) - 工作目录和安全范围设置
+
+### 配置和定制
+
+- ⚙️  [**配置指南**](./CONFIG.md) - 自定义工作流行为
+- 🔐 安全配置 - 敏感文件保护和危险操作检测（见 autonomous-dev skill 文档）
+- 🔧 [Git 工作流集成](./GIT_WORKFLOW.md) - 与 Git 最佳实践结合
+
+### 优化和故障排除
+
+- 🚀 [性能优化指南](./PERFORMANCE.md) - 提升执行速度
+- 🔍 [**故障排除指南**](./TROUBLESHOOTING.md) - 解决常见问题
+- 📊 性能监控 - 查看执行指标和统计（见配置文档）
+
+### 核心特性文档
+
+- 📝 **需求文档生成** - 详见 [requirements-doc skill](./skills/requirements-doc/SKILL.md)
+- 🤖 **自主开发** - 详见 [autonomous-dev skill](./skills/autonomous-dev/SKILL.md)
+- 🔄 **进度记录与恢复** - 断点续传、检查点机制（见 autonomous-dev 文档）
+- 🔒 **安全检查机制** - 文件保护、代码扫描（见 autonomous-dev 文档）
 
 ## 快速安装
 
@@ -219,10 +250,12 @@ claude-skills/
 │   │   └── SKILL.md
 │   ├── commit-message/
 │   │   └── SKILL.md
-│   ├── ... (43 个 Skills)
+│   ├── ... (44 个 Skills)
 │   └── mind-mapper/
 │       └── SKILL.md
 ├── workflows/                  # 工作流目录
+│   ├── full-auto-development/
+│   │   └── WORKFLOW.md
 │   ├── code-review-flow/
 │   │   └── WORKFLOW.md
 │   ├── feature-development/

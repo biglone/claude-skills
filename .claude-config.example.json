@@ -1,0 +1,107 @@
+{
+  "version": "1.0",
+  "description": "Claude Skills 配置示例文件 - 复制此文件为 .claude-config.json 并根据需求修改",
+
+  "global": {
+    "log_level": "info",
+    "max_concurrent_tasks": 3,
+    "timeout": 600000,
+    "auto_save_interval": 30
+  },
+
+  "requirements_doc": {
+    "template": "default",
+    "detail_level": "detailed",
+    "include_diagrams": true,
+    "language": "zh-CN",
+    "skip_sections": []
+  },
+
+  "autonomous_dev": {
+    "auto_commit": false,
+    "auto_push": false,
+    "max_retries": 3,
+    "auto_fix": true,
+    "skip_tests": false,
+    "skip_review": false,
+    "checkpoint_frequency": "every_stage",
+    "log_retention_days": 7
+  },
+
+  "full_auto_development": {
+    "skip_confirmation": false,
+    "auto_approve_safe_changes": false,
+    "require_manual_review": true,
+    "timeout_per_phase": {
+      "requirements": 300,
+      "confirmation": -1,
+      "development": 3600
+    }
+  },
+
+  "safety": {
+    "excluded_files": [
+      ".env",
+      ".env.*",
+      "credentials.json",
+      "secrets.*",
+      "*.key",
+      "*.pem"
+    ],
+    "excluded_directories": [
+      "node_modules",
+      ".git",
+      "dist",
+      "build"
+    ],
+    "dangerous_operations": {
+      "delete_confirmation_threshold": 10,
+      "require_confirmation": [
+        "database_migration",
+        "config_change",
+        "dependency_update"
+      ]
+    },
+    "max_file_size_mb": 10,
+    "max_files_per_task": 50
+  },
+
+  "commands": {
+    "test": "npm test",
+    "lint": "npm run lint",
+    "build": "npm run build",
+    "format": "npm run format",
+    "typecheck": "npm run typecheck"
+  },
+
+  "git": {
+    "auto_stage": true,
+    "commit_message_template": "feat: {summary}\n\n{details}\n\n🤖 Generated with Claude Code\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>",
+    "branch_naming": "feature/{feature-name}",
+    "require_hooks": true,
+    "pre_commit_checks": ["lint", "test"]
+  },
+
+  "monitoring": {
+    "enabled": true,
+    "metrics_file": ".claude-metrics.json",
+    "track_performance": true,
+    "track_errors": true,
+    "send_telemetry": false
+  },
+
+  "ui": {
+    "show_progress_bar": true,
+    "use_emojis": true,
+    "verbose_mode": false,
+    "color_output": true
+  },
+
+  "advanced": {
+    "parallel_execution": true,
+    "cache_enabled": true,
+    "cache_ttl": 3600,
+    "optimize_for_speed": false,
+    "debug_mode": false
+  }
+}
