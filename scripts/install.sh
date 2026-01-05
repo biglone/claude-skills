@@ -57,12 +57,20 @@ select_target() {
         return
     fi
 
+    # 检查是否有可用的终端输入
+    if [ ! -t 0 ] && [ ! -e /dev/tty ]; then
+        log_warn "无法获取用户输入，默认安装到两者"
+        INSTALL_TARGET="both"
+        return
+    fi
+
     echo -e "${CYAN}请选择安装目标:${NC}"
     echo "  1) Claude Code"
     echo "  2) OpenAI Codex CLI"
     echo "  3) 两者都安装"
     echo ""
-    read -p "请输入选项 [1-3] (默认: 3): " choice
+    # 从 /dev/tty 读取，支持 curl | bash 方式
+    read -p "请输入选项 [1-3] (默认: 3): " choice </dev/tty
 
     case "$choice" in
         1) INSTALL_TARGET="claude" ;;
@@ -110,9 +118,14 @@ ask_update_skill() {
         return 0  # 更新
     fi
 
-    # ask 模式：询问用户
+    # ask 模式：询问用户（从 /dev/tty 读取，支持 curl | bash）
+    if [ ! -t 0 ] && [ ! -e /dev/tty ]; then
+        # 无法交互时默认跳过
+        return 1
+    fi
+
     echo ""
-    read -p "[$target_name] Skill '$skill_name' 已存在，是否更新? [y/N]: " answer
+    read -p "[$target_name] Skill '$skill_name' 已存在，是否更新? [y/N]: " answer </dev/tty
     case "$answer" in
         [Yy]|[Yy][Ee][Ss]) return 0 ;;
         *) return 1 ;;

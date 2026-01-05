@@ -77,12 +77,19 @@ select_target() {
         return
     fi
 
+    # 检查是否有可用的终端输入
+    if [ ! -t 0 ] && [ ! -e /dev/tty ]; then
+        log_warn "无法获取用户输入，默认卸载两者"
+        UNINSTALL_TARGET="both"
+        return
+    fi
+
     echo -e "${CYAN}请选择卸载目标:${NC}"
     echo "  1) Claude Code"
     echo "  2) OpenAI Codex CLI"
     echo "  3) 两者都卸载"
     echo ""
-    read -p "请输入选项 [1-3] (默认: 3): " choice
+    read -p "请输入选项 [1-3] (默认: 3): " choice </dev/tty
 
     case "$choice" in
         1) UNINSTALL_TARGET="claude" ;;
