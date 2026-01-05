@@ -28,6 +28,15 @@ $SkillsToRemove = @(
     "dependency-analyzer"
     "i18n-helper"
     "migration-helper"
+    "technical-writer"
+    "blog-writer"
+    "translator"
+    "data-analyzer"
+    "chart-generator"
+    "concept-explainer"
+    "tutorial-creator"
+    "task-planner"
+    "meeting-notes"
 )
 
 function Select-Target {

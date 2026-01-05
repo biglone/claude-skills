@@ -31,6 +31,15 @@
 | `dependency-analyzer` | 依赖分析和安全检查 |
 | `i18n-helper` | 国际化辅助 |
 | `migration-helper` | 数据库迁移和框架升级 |
+| `technical-writer` | 技术文档写作 |
+| `blog-writer` | 博客文章写作 |
+| `translator` | 多语言翻译 |
+| `data-analyzer` | 数据分析和解读 |
+| `chart-generator` | 图表生成和可视化 |
+| `concept-explainer` | 概念解释（通俗易懂） |
+| `tutorial-creator` | 教程和学习指南创建 |
+| `task-planner` | 任务规划和项目分解 |
+| `meeting-notes` | 会议记录和纪要整理 |
 
 ## 快速安装
 
