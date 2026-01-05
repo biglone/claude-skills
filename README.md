@@ -18,6 +18,19 @@
 | `security-audit` | 安全代码审计，检查常见漏洞 |
 | `code-explainer` | 代码解释器，帮助理解代码 |
 | `test-generator` | 生成单元测试代码 |
+| `refactoring` | 代码重构建议，识别代码异味 |
+| `api-designer` | REST/GraphQL API 设计 |
+| `doc-generator` | 自动生成代码文档、README |
+| `performance-optimizer` | 性能分析和优化建议 |
+| `bug-finder` | 调试助手，帮助定位 Bug |
+| `regex-helper` | 正则表达式编写和解释 |
+| `sql-helper` | SQL 查询编写和优化 |
+| `git-helper` | Git 操作指导 |
+| `changelog-generator` | 生成 Changelog |
+| `pr-description` | 生成 PR 描述 |
+| `dependency-analyzer` | 依赖分析和安全检查 |
+| `i18n-helper` | 国际化辅助 |
+| `migration-helper` | 数据库迁移和框架升级 |
 
 ## 快速安装
 

@@ -15,6 +15,19 @@ $SkillsToRemove = @(
     "security-audit"
     "code-explainer"
     "test-generator"
+    "refactoring"
+    "api-designer"
+    "doc-generator"
+    "performance-optimizer"
+    "bug-finder"
+    "regex-helper"
+    "sql-helper"
+    "git-helper"
+    "changelog-generator"
+    "pr-description"
+    "dependency-analyzer"
+    "i18n-helper"
+    "migration-helper"
 )
 
 function Select-Target {
