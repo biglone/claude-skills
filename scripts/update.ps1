@@ -117,49 +117,59 @@ function Main {
     Write-Host "╚═══════════════════════════════════════════╝" -ForegroundColor Cyan
     Write-Host ""
 
-    # 检查 Git
+    $Succeeded = $false
+
     try {
-        git --version | Out-Null
-    } catch {
-        Write-Err "Git 未安装"
-        exit 1
+        # 检查 Git
+        try {
+            git --version | Out-Null
+        } catch {
+            throw "Git 未安装"
+        }
+
+        $Target = Select-Target
+
+        if ($PruneMode -ne "on" -and $PruneMode -ne "off") {
+            Write-Warn "PRUNE_MODE 仅支持 on/off，当前为 '$PruneMode'，已自动降级为 off"
+            $script:PruneMode = "off"
+        }
+
+        Write-Info "获取最新 skills..."
+        Write-DebugInfo "clone source: $RepoUrl"
+        Write-DebugInfo "clone target: $TempDir"
+        try {
+            git clone --depth 1 $RepoUrl $TempDir
+        } catch {
+            throw "克隆仓库失败"
+        }
+
+        $SourceDir = Join-Path $TempDir "skills"
+        $WorkflowsSourceDir = Join-Path $TempDir "workflows"
+
+        if ($Target -eq "claude" -or $Target -eq "both") {
+            Update-SkillsInDir -TargetDir $ClaudeSkillsDir -TargetName "Claude Code" -SourceDir $SourceDir
+            Update-WorkflowsInDir -TargetDir $ClaudeWorkflowsDir -TargetName "Claude Code" -SourceDir $WorkflowsSourceDir
+        }
+
+        if ($Target -eq "codex" -or $Target -eq "both") {
+            Update-SkillsInDir -TargetDir $CodexSkillsDir -TargetName "Codex CLI" -SourceDir $SourceDir
+            Update-WorkflowsInDir -TargetDir $CodexWorkflowsDir -TargetName "Codex CLI" -SourceDir $WorkflowsSourceDir
+        }
+
+        $Succeeded = $true
+    } finally {
+        Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
     }
 
-    $Target = Select-Target
-
-    if ($PruneMode -ne "on" -and $PruneMode -ne "off") {
-        Write-Warn "PRUNE_MODE 仅支持 on/off，当前为 '$PruneMode'，已自动降级为 off"
-        $script:PruneMode = "off"
+    if ($Succeeded) {
+        Write-Host ""
+        Write-Info "更新完成! 请重启对应的 AI 编程工具"
     }
-
-    Write-Info "获取最新 skills..."
-    Write-DebugInfo "clone source: $RepoUrl"
-    Write-DebugInfo "clone target: $TempDir"
-    try {
-        git clone --depth 1 $RepoUrl $TempDir
-    } catch {
-        Write-Err "克隆仓库失败"
-        exit 1
-    }
-
-    $SourceDir = Join-Path $TempDir "skills"
-    $WorkflowsSourceDir = Join-Path $TempDir "workflows"
-
-    if ($Target -eq "claude" -or $Target -eq "both") {
-        Update-SkillsInDir -TargetDir $ClaudeSkillsDir -TargetName "Claude Code" -SourceDir $SourceDir
-        Update-WorkflowsInDir -TargetDir $ClaudeWorkflowsDir -TargetName "Claude Code" -SourceDir $WorkflowsSourceDir
-    }
-
-    if ($Target -eq "codex" -or $Target -eq "both") {
-        Update-SkillsInDir -TargetDir $CodexSkillsDir -TargetName "Codex CLI" -SourceDir $SourceDir
-        Update-WorkflowsInDir -TargetDir $CodexWorkflowsDir -TargetName "Codex CLI" -SourceDir $WorkflowsSourceDir
-    }
-
-    # 清理
-    Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
-
-    Write-Host ""
-    Write-Info "更新完成! 请重启对应的 AI 编程工具"
 }
 
-Main
+try {
+    Main
+} catch {
+    Write-Err $_.Exception.Message
+    exit 1
+}

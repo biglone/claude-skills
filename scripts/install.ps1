@@ -183,59 +183,69 @@ function Main {
     Write-Host "╚═══════════════════════════════════════════╝" -ForegroundColor Cyan
     Write-Host ""
 
-    # 检查 Git
-    if (-not (Test-Git)) {
-        Write-Err "Git 未安装，请先安装 Git"
-        exit 1
-    }
+    $Target = $null
+    $Succeeded = $false
 
-    # 选择目标
-    $Target = Select-Target
-
-    # 克隆仓库
-    Write-Info "克隆 skills 仓库..."
-    Write-DebugInfo "clone source: $RepoUrl"
-    Write-DebugInfo "clone target: $TempDir"
     try {
-        git clone --depth 1 $RepoUrl $TempDir
-    } catch {
-        Write-Err "克隆仓库失败，请检查仓库地址: $RepoUrl"
-        exit 1
+        # 检查 Git
+        if (-not (Test-Git)) {
+            throw "Git 未安装，请先安装 Git"
+        }
+
+        # 选择目标
+        $Target = Select-Target
+
+        # 克隆仓库
+        Write-Info "克隆 skills 仓库..."
+        Write-DebugInfo "clone source: $RepoUrl"
+        Write-DebugInfo "clone target: $TempDir"
+        try {
+            git clone --depth 1 $RepoUrl $TempDir
+        } catch {
+            throw "克隆仓库失败，请检查仓库地址: $RepoUrl"
+        }
+
+        $SourceDir = Join-Path $TempDir "skills"
+        $WorkflowsSourceDir = Join-Path $TempDir "workflows"
+
+        if (-not (Test-Path $SourceDir)) {
+            throw "skills 目录不存在"
+        }
+
+        # 安装 skills
+        if ($Target -eq "claude" -or $Target -eq "both") {
+            Install-SkillsToDir -TargetDir $ClaudeSkillsDir -TargetName "Claude Code" -SourceDir $SourceDir
+            Install-WorkflowsToDir -TargetDir $ClaudeWorkflowsDir -TargetName "Claude Code" -SourceDir $WorkflowsSourceDir
+        }
+
+        if ($Target -eq "codex" -or $Target -eq "both") {
+            Install-SkillsToDir -TargetDir $CodexSkillsDir -TargetName "Codex CLI" -SourceDir $SourceDir
+            Install-WorkflowsToDir -TargetDir $CodexWorkflowsDir -TargetName "Codex CLI" -SourceDir $WorkflowsSourceDir
+        }
+
+        # 显示已安装
+        if ($Target -eq "claude" -or $Target -eq "both") {
+            Show-Installed -SkillsDir $ClaudeSkillsDir -Name "Claude Code"
+        }
+
+        if ($Target -eq "codex" -or $Target -eq "both") {
+            Show-Installed -SkillsDir $CodexSkillsDir -Name "Codex CLI"
+        }
+
+        $Succeeded = $true
+    } finally {
+        Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
     }
 
-    $SourceDir = Join-Path $TempDir "skills"
-    $WorkflowsSourceDir = Join-Path $TempDir "workflows"
-
-    if (-not (Test-Path $SourceDir)) {
-        Write-Err "skills 目录不存在"
-        exit 1
+    if ($Succeeded) {
+        Write-Host ""
+        Write-Info "安装完成! 请重启对应的 AI 编程工具以加载 Skills"
     }
-
-    # 安装 skills
-    if ($Target -eq "claude" -or $Target -eq "both") {
-        Install-SkillsToDir -TargetDir $ClaudeSkillsDir -TargetName "Claude Code" -SourceDir $SourceDir
-        Install-WorkflowsToDir -TargetDir $ClaudeWorkflowsDir -TargetName "Claude Code" -SourceDir $WorkflowsSourceDir
-    }
-
-    if ($Target -eq "codex" -or $Target -eq "both") {
-        Install-SkillsToDir -TargetDir $CodexSkillsDir -TargetName "Codex CLI" -SourceDir $SourceDir
-        Install-WorkflowsToDir -TargetDir $CodexWorkflowsDir -TargetName "Codex CLI" -SourceDir $WorkflowsSourceDir
-    }
-
-    # 显示已安装
-    if ($Target -eq "claude" -or $Target -eq "both") {
-        Show-Installed -SkillsDir $ClaudeSkillsDir -Name "Claude Code"
-    }
-
-    if ($Target -eq "codex" -or $Target -eq "both") {
-        Show-Installed -SkillsDir $CodexSkillsDir -Name "Codex CLI"
-    }
-
-    # 清理
-    Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
-
-    Write-Host ""
-    Write-Info "安装完成! 请重启对应的 AI 编程工具以加载 Skills"
 }
 
-Main
+try {
+    Main
+} catch {
+    Write-Err $_.Exception.Message
+    exit 1
+}
