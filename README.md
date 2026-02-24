@@ -34,6 +34,7 @@
 | `i18n-helper` | 国际化辅助 |
 | `migration-helper` | 数据库迁移和框架升级 |
 | `requirements-doc` | 需求文档生成器，将简单需求转换为结构化文档和任务列表 |
+| `cloudflared-tunnel` | 在 Linux 上通过 cloudflared tunnel 将本地服务地址绑定域名并快速公网访问 |
 
 ### 写作与翻译类
 
@@ -250,7 +251,7 @@ claude-skills/
 │   │   └── SKILL.md
 │   ├── commit-message/
 │   │   └── SKILL.md
-│   ├── ... (47 个 Skills)
+│   ├── ... (48 个 Skills)
 │   └── mind-mapper/
 │       └── SKILL.md
 ├── workflows/                  # 工作流目录
