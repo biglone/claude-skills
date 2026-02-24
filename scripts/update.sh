@@ -59,7 +59,7 @@ select_target() {
     fi
 
     # 检查是否有可用的终端输入
-    if [ ! -t 0 ] && [ ! -e /dev/tty ]; then
+    if [ ! -t 0 ] && [ ! -r /dev/tty ]; then
         log_warn "无法获取用户输入，默认更新两者"
         UPDATE_TARGET="both"
         return
