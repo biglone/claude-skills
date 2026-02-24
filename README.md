@@ -161,17 +161,26 @@ irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install
 
 ### 环境变量配置
 
-通过环境变量控制安装行为：
+通过环境变量控制安装/更新/卸载行为：
 
-| 变量 | 值 | 说明 |
-|------|-----|------|
-| `INSTALL_TARGET` | `claude` / `codex` / `both` | 安装目标平台 |
-| `UPDATE_MODE` | `ask` / `skip` / `force` | 已存在 skill 的处理方式 |
+| 变量 | 适用脚本 | 值 | 说明 |
+|------|----------|-----|------|
+| `SKILLS_REPO` | install/update | Git URL | 自定义仓库地址（默认官方仓库） |
+| `INSTALL_TARGET` | install | `claude` / `codex` / `both` | 安装目标平台 |
+| `UPDATE_MODE` | install | `ask` / `skip` / `force` | 处理本地已存在 skill 的策略 |
+| `UPDATE_TARGET` | update | `claude` / `codex` / `both` | 更新目标平台 |
+| `PRUNE_MODE` | update | `on` / `off` | 是否清理本地已下线的 skill/workflow |
+| `UNINSTALL_TARGET` | uninstall | `claude` / `codex` / `both` | 卸载目标平台 |
+| `DEBUG` | install/update | `1` / `true` | 输出额外调试日志（如 clone 源与目标路径） |
 
-**UPDATE_MODE 说明：**
+**UPDATE_MODE 说明（install 脚本）：**
 - `ask` (默认): 逐个询问是否更新已存在的 skill
 - `skip`: 跳过所有已存在的 skill
 - `force`: 强制更新所有 skill
+
+**PRUNE_MODE 说明（update 脚本）：**
+- `off` (默认): 只更新/新增，不删除本地多余目录
+- `on`: 同步清理远端已下线的 skill/workflow
 
 **macOS / Linux:**
 ```bash
