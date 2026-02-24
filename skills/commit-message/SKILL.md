@@ -52,11 +52,18 @@ allowed-tools: Bash
    - Breaking change: `BREAKING CHANGE: description`
    - **禁止添加**: AI 生成标识、Co-Authored-By 等自动签名
 
+4. **语言一致性**:
+   - 先查看最近提交历史，识别仓库主语言（中文或英文）
+   - 新提交的 `subject/body/footer` 默认使用与历史一致的语言
+   - 若历史语言混用，以当前分支最近 20 条提交中占比最高的语言为准
+   - 若用户明确指定语言，按用户指定执行
+
 ## 禁止事项
 
 生成 commit message 时，**绝对不要**添加以下内容：
 - `🤖 Generated with [Claude Code]` 或类似 AI 生成标识
 - `Co-Authored-By: Claude` 或任何 AI 署名
+- `Co-Authored-By: ChatGPT/Codex/GPT-*` 等 AI 相关贡献者标记
 - 任何表明由 AI 生成的标记或签名
 
 提交信息应该简洁、专业，只包含与代码变更相关的内容。
