@@ -11,6 +11,7 @@ CLAUDE_WORKFLOWS_DIR="$HOME/.claude/workflows"
 CODEX_WORKFLOWS_DIR="$HOME/.codex/workflows"
 
 UNINSTALL_TARGET="${UNINSTALL_TARGET:-}"
+MANIFEST_BASE_URL="${MANIFEST_BASE_URL:-https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/manifest}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -20,74 +21,58 @@ NC='\033[0m'
 
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-SKILLS_TO_REMOVE=(
-    # 编程开发类
-    "code-reviewer"
-    "commit-message"
-    "security-audit"
-    "code-explainer"
-    "test-generator"
-    "refactoring"
-    "api-designer"
-    "doc-generator"
-    "performance-optimizer"
-    "bug-finder"
-    "regex-helper"
-    "sql-helper"
-    "git-helper"
-    "changelog-generator"
-    "pr-description"
-    "dependency-analyzer"
-    "i18n-helper"
-    "migration-helper"
-    # 写作与翻译类
-    "technical-writer"
-    "blog-writer"
-    "translator"
-    "email-writer"
-    "presentation-maker"
-    # 数据与分析类
-    "data-analyzer"
-    "chart-generator"
-    # 学习与知识管理类
-    "concept-explainer"
-    "tutorial-creator"
-    "note-taker"
-    "knowledge-base"
-    "learning-tracker"
-    # 个人效率类
-    "task-planner"
-    "meeting-notes"
-    "weekly-review"
-    "goal-setter"
-    "habit-tracker"
-    "decision-maker"
-    # 职业发展类
-    "resume-builder"
-    "interview-helper"
-    "career-planner"
-    "feedback-giver"
-    # 创意思考类
-    "brainstormer"
-    "outline-creator"
-    "mind-mapper"
-    # 自动化类
-    "autonomous-dev"
-    "auto-code-pipeline"
-    "auto-fix-loop"
-    "requirements-doc"
-)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOCAL_MANIFEST_DIR="$SCRIPT_DIR/manifest"
+SKILLS_TO_REMOVE=()
+WORKFLOWS_TO_REMOVE=()
 
-WORKFLOWS_TO_REMOVE=(
-    "full-auto-development"
-    "code-review-flow"
-    "feature-development"
-    "content-creation"
-    "weekly-planning"
-    "learning-path"
-    "project-kickoff"
-)
+read_manifest_stream() {
+    local filename="$1"
+    local local_path="$LOCAL_MANIFEST_DIR/$filename"
+
+    if [ -f "$local_path" ]; then
+        cat "$local_path"
+        return
+    fi
+
+    if command -v curl > /dev/null 2>&1; then
+        curl -fsSL "$MANIFEST_BASE_URL/$filename"
+        return
+    fi
+
+    if command -v wget > /dev/null 2>&1; then
+        wget -qO- "$MANIFEST_BASE_URL/$filename"
+        return
+    fi
+
+    log_error "无法读取 manifest: $filename（本地缺失且未找到 curl/wget）"
+    exit 1
+}
+
+load_manifests() {
+    while IFS= read -r line; do
+        line="${line#"${line%%[![:space:]]*}"}"
+        line="${line%"${line##*[![:space:]]}"}"
+        [ -z "$line" ] && continue
+        case "$line" in \#*) continue ;; esac
+        SKILLS_TO_REMOVE+=("$line")
+    done < <(read_manifest_stream "skills.txt")
+
+    while IFS= read -r line; do
+        line="${line#"${line%%[![:space:]]*}"}"
+        line="${line%"${line##*[![:space:]]}"}"
+        [ -z "$line" ] && continue
+        case "$line" in \#*) continue ;; esac
+        WORKFLOWS_TO_REMOVE+=("$line")
+    done < <(read_manifest_stream "workflows.txt")
+
+    if [ "${#SKILLS_TO_REMOVE[@]}" -eq 0 ]; then
+        log_error "skills manifest 为空"
+        exit 1
+    fi
+}
 
 select_target() {
     if [ -n "$UNINSTALL_TARGET" ]; then
@@ -154,6 +139,7 @@ main() {
     echo ""
 
     select_target
+    load_manifests
 
     if [ "$UNINSTALL_TARGET" = "claude" ] || [ "$UNINSTALL_TARGET" = "both" ]; then
         uninstall_from_dir "$CLAUDE_SKILLS_DIR" "Claude Code"

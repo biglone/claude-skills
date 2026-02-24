@@ -7,77 +7,40 @@ $ClaudeSkillsDir = Join-Path $env:USERPROFILE ".claude\skills"
 $CodexSkillsDir = Join-Path $env:USERPROFILE ".codex\skills"
 $ClaudeWorkflowsDir = Join-Path $env:USERPROFILE ".claude\workflows"
 $CodexWorkflowsDir = Join-Path $env:USERPROFILE ".codex\workflows"
+$ManifestBaseUrl = if ($env:MANIFEST_BASE_URL) { $env:MANIFEST_BASE_URL } else { "https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/manifest" }
+$ScriptDir = if ($MyInvocation.MyCommand.Path) { Split-Path -Parent $MyInvocation.MyCommand.Path } else { "" }
 
 function Write-Info { param($Message) Write-Host "[INFO] $Message" -ForegroundColor Green }
 function Write-Warn { param($Message) Write-Host "[WARN] $Message" -ForegroundColor Yellow }
+function Write-Err { param($Message) Write-Host "[ERROR] $Message" -ForegroundColor Red }
 
-$SkillsToRemove = @(
-    # 编程开发类
-    "code-reviewer"
-    "commit-message"
-    "security-audit"
-    "code-explainer"
-    "test-generator"
-    "refactoring"
-    "api-designer"
-    "doc-generator"
-    "performance-optimizer"
-    "bug-finder"
-    "regex-helper"
-    "sql-helper"
-    "git-helper"
-    "changelog-generator"
-    "pr-description"
-    "dependency-analyzer"
-    "i18n-helper"
-    "migration-helper"
-    # 写作与翻译类
-    "technical-writer"
-    "blog-writer"
-    "translator"
-    "email-writer"
-    "presentation-maker"
-    # 数据与分析类
-    "data-analyzer"
-    "chart-generator"
-    # 学习与知识管理类
-    "concept-explainer"
-    "tutorial-creator"
-    "note-taker"
-    "knowledge-base"
-    "learning-tracker"
-    # 个人效率类
-    "task-planner"
-    "meeting-notes"
-    "weekly-review"
-    "goal-setter"
-    "habit-tracker"
-    "decision-maker"
-    # 职业发展类
-    "resume-builder"
-    "interview-helper"
-    "career-planner"
-    "feedback-giver"
-    # 创意思考类
-    "brainstormer"
-    "outline-creator"
-    "mind-mapper"
-    # 自动化类
-    "autonomous-dev"
-    "auto-code-pipeline"
-    "auto-fix-loop"
-    "requirements-doc"
-)
+function Get-ManifestEntries {
+    param($FileName)
 
-$WorkflowsToRemove = @(
-    "full-auto-development"
-    "code-review-flow"
-    "feature-development"
-    "content-creation"
-    "weekly-planning"
-    "learning-path"
-    "project-kickoff"
-)
+    $LocalPath = if ($ScriptDir) { Join-Path $ScriptDir ("manifest\" + $FileName) } else { "" }
+    $Lines = $null
+
+    if ($LocalPath -and (Test-Path $LocalPath)) {
+        $Lines = Get-Content $LocalPath
+    } else {
+        $Url = "$ManifestBaseUrl/$FileName"
+        try {
+            $Response = Invoke-WebRequest -Uri $Url -UseBasicParsing
+            $Lines = $Response.Content -split "`r?`n"
+        } catch {
+            throw "无法读取 manifest: $FileName"
+        }
+    }
+
+    $Entries = @()
+    foreach ($Line in $Lines) {
+        $Item = $Line.Trim()
+        if (-not $Item) { continue }
+        if ($Item.StartsWith("#")) { continue }
+        $Entries += $Item
+    }
+    return $Entries
+}
 
 function Select-Target {
     if ($env:UNINSTALL_TARGET) {
@@ -103,7 +66,7 @@ function Select-Target {
 }
 
 function Uninstall-FromDir {
-    param($TargetDir, $TargetName)
+    param($TargetDir, $TargetName, $SkillsToRemove)
 
     foreach ($Skill in $SkillsToRemove) {
         $SkillPath = Join-Path $TargetDir $Skill
@@ -118,7 +81,7 @@ function Uninstall-FromDir {
 }
 
 function Uninstall-WorkflowsFromDir {
-    param($TargetDir, $TargetName)
+    param($TargetDir, $TargetName, $WorkflowsToRemove)
 
     foreach ($Workflow in $WorkflowsToRemove) {
         $WorkflowPath = Join-Path $TargetDir $Workflow
@@ -140,19 +103,30 @@ function Main {
     Write-Host ""
 
     $Target = Select-Target
+    $SkillsToRemove = Get-ManifestEntries -FileName "skills.txt"
+    $WorkflowsToRemove = Get-ManifestEntries -FileName "workflows.txt"
+
+    if ($SkillsToRemove.Count -eq 0) {
+        throw "skills manifest 为空"
+    }
 
     if ($Target -eq "claude" -or $Target -eq "both") {
-        Uninstall-FromDir -TargetDir $ClaudeSkillsDir -TargetName "Claude Code"
-        Uninstall-WorkflowsFromDir -TargetDir $ClaudeWorkflowsDir -TargetName "Claude Code"
+        Uninstall-FromDir -TargetDir $ClaudeSkillsDir -TargetName "Claude Code" -SkillsToRemove $SkillsToRemove
+        Uninstall-WorkflowsFromDir -TargetDir $ClaudeWorkflowsDir -TargetName "Claude Code" -WorkflowsToRemove $WorkflowsToRemove
     }
 
     if ($Target -eq "codex" -or $Target -eq "both") {
-        Uninstall-FromDir -TargetDir $CodexSkillsDir -TargetName "Codex CLI"
-        Uninstall-WorkflowsFromDir -TargetDir $CodexWorkflowsDir -TargetName "Codex CLI"
+        Uninstall-FromDir -TargetDir $CodexSkillsDir -TargetName "Codex CLI" -SkillsToRemove $SkillsToRemove
+        Uninstall-WorkflowsFromDir -TargetDir $CodexWorkflowsDir -TargetName "Codex CLI" -WorkflowsToRemove $WorkflowsToRemove
     }
 
     Write-Host ""
     Write-Info "卸载完成! 请重启对应的 AI 编程工具"
 }
 
-Main
+try {
+    Main
+} catch {
+    Write-Err $_.Exception.Message
+    exit 1
+}
