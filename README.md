@@ -35,6 +35,7 @@
 | `migration-helper` | 数据库迁移和框架升级 |
 | `requirements-doc` | 需求文档生成器，将简单需求转换为结构化文档和任务列表 |
 | `cloudflared-tunnel` | 在 Linux 上通过 cloudflared tunnel 将本地服务地址绑定域名并快速公网访问 |
+| `cloudflared-tunnel-inspector` | 在 Linux 上列出 tunnel 公开服务及其配置映射信息 |
 
 ### 写作与翻译类
 
@@ -251,7 +252,7 @@ claude-skills/
 │   │   └── SKILL.md
 │   ├── commit-message/
 │   │   └── SKILL.md
-│   ├── ... (48 个 Skills)
+│   ├── ... (49 个 Skills)
 │   └── mind-mapper/
 │       └── SKILL.md
 ├── workflows/                  # 工作流目录
