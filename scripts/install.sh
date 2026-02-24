@@ -4,7 +4,7 @@
 # 支持 Claude Code 和 OpenAI Codex CLI
 # 用法: curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
 
-set -e
+set -euo pipefail
 
 # 配置
 REPO_URL="${SKILLS_REPO:-https://github.com/biglone/claude-skills.git}"

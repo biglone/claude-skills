@@ -3,7 +3,7 @@
 # AI Skills 卸载脚本
 # 支持 Claude Code 和 OpenAI Codex CLI
 
-set -e
+set -euo pipefail
 
 CLAUDE_SKILLS_DIR="$HOME/.claude/skills"
 CODEX_SKILLS_DIR="$HOME/.codex/skills"

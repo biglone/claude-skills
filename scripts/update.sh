@@ -3,7 +3,7 @@
 # AI Coding Skills 更新脚本
 # 支持 Claude Code 和 OpenAI Codex CLI
 
-set -e
+set -euo pipefail
 
 REPO_URL="${SKILLS_REPO:-https://github.com/biglone/claude-skills.git}"
 CLAUDE_SKILLS_DIR="$HOME/.claude/skills"
