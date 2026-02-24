@@ -9,10 +9,26 @@ $CodexSkillsDir = Join-Path $env:USERPROFILE ".codex\skills"
 $ClaudeWorkflowsDir = Join-Path $env:USERPROFILE ".claude\workflows"
 $CodexWorkflowsDir = Join-Path $env:USERPROFILE ".codex\workflows"
 $TempDir = Join-Path $env:TEMP "ai-skills-$(Get-Random)"
+$PruneMode = if ($env:PRUNE_MODE) { $env:PRUNE_MODE.ToLower() } else { "off" }  # on/off
 
 function Write-Info { param($Message) Write-Host "[INFO] $Message" -ForegroundColor Green }
 function Write-Warn { param($Message) Write-Host "[WARN] $Message" -ForegroundColor Yellow }
 function Write-Err { param($Message) Write-Host "[ERROR] $Message" -ForegroundColor Red }
+
+function Prune-RemovedDirs {
+    param($TargetDir, $SourceDir, $TargetName, $ItemLabel)
+
+    if (-not (Test-Path $TargetDir) -or -not (Test-Path $SourceDir)) { return }
+
+    Get-ChildItem -Path $TargetDir -Directory | ForEach-Object {
+        $Name = $_.Name
+        $SourcePath = Join-Path $SourceDir $Name
+        if (-not (Test-Path $SourcePath)) {
+            Remove-Item -Path $_.FullName -Recurse -Force
+            Write-Info "[$TargetName] 清理已下线 $ItemLabel: $Name"
+        }
+    }
+}
 
 function Select-Target {
     if ($env:UPDATE_TARGET) {
@@ -56,6 +72,10 @@ function Update-SkillsInDir {
         }
         Copy-Item -Path $_.FullName -Destination $TargetDir -Recurse
     }
+
+    if ($PruneMode -eq "on") {
+        Prune-RemovedDirs -TargetDir $TargetDir -SourceDir $SourceDir -TargetName $TargetName -ItemLabel "skill"
+    }
 }
 
 function Update-WorkflowsInDir {
@@ -82,6 +102,10 @@ function Update-WorkflowsInDir {
         }
         Copy-Item -Path $_.FullName -Destination $TargetDir -Recurse
     }
+
+    if ($PruneMode -eq "on") {
+        Prune-RemovedDirs -TargetDir $TargetDir -SourceDir $SourceDir -TargetName $TargetName -ItemLabel "workflow"
+    }
 }
 
 function Main {
@@ -100,6 +124,11 @@ function Main {
     }
 
     $Target = Select-Target
+
+    if ($PruneMode -ne "on" -and $PruneMode -ne "off") {
+        Write-Warn "PRUNE_MODE 仅支持 on/off，当前为 '$PruneMode'，已自动降级为 off"
+        $script:PruneMode = "off"
+    }
 
     Write-Info "获取最新 skills..."
     try {

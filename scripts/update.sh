@@ -13,6 +13,7 @@ CODEX_WORKFLOWS_DIR="$HOME/.codex/workflows"
 TEMP_DIR=$(mktemp -d)
 
 UPDATE_TARGET="${UPDATE_TARGET:-}"
+PRUNE_MODE="${PRUNE_MODE:-off}"  # on/off: 是否清理本地已下线的 skill/workflow
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -26,6 +27,25 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 cleanup() { rm -rf "$TEMP_DIR"; }
 trap cleanup EXIT
+
+prune_removed_dirs() {
+    local target_dir="$1"
+    local source_dir="$2"
+    local target_name="$3"
+    local item_label="$4"
+
+    [ -d "$target_dir" ] || return
+    [ -d "$source_dir" ] || return
+
+    for item in "$target_dir"/*; do
+        [ -d "$item" ] || continue
+        item_name=$(basename "$item")
+        if [ ! -d "$source_dir/$item_name" ]; then
+            rm -rf "$item"
+            log_info "[$target_name] 清理已下线 $item_label: $item_name"
+        fi
+    done
+}
 
 select_target() {
     if [ -n "$UPDATE_TARGET" ]; then
@@ -77,6 +97,10 @@ update_skills_in_dir() {
             cp -r "$skill" "$target_dir/"
         fi
     done
+
+    if [ "$PRUNE_MODE" = "on" ]; then
+        prune_removed_dirs "$target_dir" "$source_dir" "$target_name" "skill"
+    fi
 }
 
 update_workflows_in_dir() {
@@ -107,6 +131,10 @@ update_workflows_in_dir() {
             cp -r "$workflow" "$target_dir/"
         fi
     done
+
+    if [ "$PRUNE_MODE" = "on" ]; then
+        prune_removed_dirs "$target_dir" "$source_dir" "$target_name" "workflow"
+    fi
 }
 
 main() {
@@ -122,6 +150,11 @@ main() {
     fi
 
     select_target
+
+    if [ "$PRUNE_MODE" != "on" ] && [ "$PRUNE_MODE" != "off" ]; then
+        log_warn "PRUNE_MODE 仅支持 on/off，当前为 '$PRUNE_MODE'，已自动降级为 off"
+        PRUNE_MODE="off"
+    fi
 
     log_info "获取最新 skills..."
     git clone --depth 1 "$REPO_URL" "$TEMP_DIR/skills-repo" 2>/dev/null || {
