@@ -1,0 +1,17 @@
+name: Validate Skills
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  validate-skills:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate skill files
+        run: ./scripts/validate-skills.sh

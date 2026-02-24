@@ -393,7 +393,7 @@ export CLAUDE_AUTO_FIX_SECURITY=true
 git diff
 
 # 3. 撤销修改
-git checkout -- .env
+git restore .env
 
 # 4. 从检查点恢复
 "从上个检查点恢复"
@@ -411,6 +411,6 @@ git reset HEAD~1
 
 # 如果已经 push，需要：
 # 1. 立即轮换密钥/密码
-# 2. 使用 git filter-branch 清理历史（谨慎）
+# 2. 使用 git filter-repo 清理历史（谨慎）
 # 3. 通知团队
 ```

@@ -67,8 +67,7 @@ git commit --amend        # 修改最后一次提交
 
 # 撤销
 git reset HEAD <file>     # 取消暂存
-git checkout -- <file>    # 丢弃工作区更改
-git restore <file>        # 新语法
+git restore <file>        # 丢弃工作区更改（推荐）
 git restore --staged <file>  # 取消暂存（新语法）
 ```
 
@@ -164,8 +163,8 @@ git mergetool
 # 撤销最后一次提交（保留更改）
 git reset --soft HEAD~1
 
-# 撤销最后一次提交（丢弃更改）
-git reset --hard HEAD~1
+# 撤销最后一次提交（保留工作区内容，不保留暂存）
+git reset --mixed HEAD~1
 
 # 创建新提交来撤销（推荐用于已推送的提交）
 git revert <commit-hash>
@@ -175,10 +174,10 @@ git revert HEAD  # 撤销最后一次提交
 ### 恢复文件
 ```bash
 # 恢复已删除的文件
-git checkout HEAD -- <file>
+git restore --source=HEAD -- <file>
 
 # 从特定提交恢复
-git checkout <commit-hash> -- <file>
+git restore --source=<commit-hash> -- <file>
 
 # 恢复误删的分支
 git reflog  # 查看操作历史
@@ -235,8 +234,8 @@ git bisect reset  # 完成后重置
 git revert <commit-hash>
 git push
 
-# 方式2：强制推送（危险，会影响他人）
-git reset --hard <commit-hash>
+# 方式2：重写历史（高风险，仅团队确认后使用）
+git rebase -i <commit-hash>^
 git push --force-with-lease
 ```
 

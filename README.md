@@ -250,7 +250,7 @@ claude-skills/
 │   │   └── SKILL.md
 │   ├── commit-message/
 │   │   └── SKILL.md
-│   ├── ... (44 个 Skills)
+│   ├── ... (47 个 Skills)
 │   └── mind-mapper/
 │       └── SKILL.md
 ├── workflows/                  # 工作流目录

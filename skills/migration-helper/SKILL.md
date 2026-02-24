@@ -253,13 +253,19 @@ Sequelize → Prisma
 ### 包管理器迁移
 ```bash
 # npm → pnpm
-rm -rf node_modules package-lock.json
+cp package-lock.json package-lock.json.bak
+rm -rf node_modules
 pnpm import  # 从 package-lock.json 生成
 pnpm install
+# 验证通过后可删除旧 lock 备份
+# rm -f package-lock.json.bak package-lock.json
 
 # npm → yarn
-rm -rf node_modules package-lock.json
+cp package-lock.json package-lock.json.bak
+rm -rf node_modules
 yarn install
+# 验证通过后再移除旧 lock
+# rm -f package-lock.json.bak package-lock.json
 ```
 
 ## 输出格式
