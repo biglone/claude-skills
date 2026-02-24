@@ -14,6 +14,7 @@ TEMP_DIR=$(mktemp -d)
 
 UPDATE_TARGET="${UPDATE_TARGET:-}"
 PRUNE_MODE="${PRUNE_MODE:-off}"  # on/off: 是否清理本地已下线的 skill/workflow
+DEBUG="${DEBUG:-0}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -24,6 +25,11 @@ NC='\033[0m'
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+log_debug() {
+    if [ "$DEBUG" = "1" ]; then
+        echo -e "${CYAN}[DEBUG]${NC} $1"
+    fi
+}
 
 cleanup() { rm -rf "$TEMP_DIR"; }
 trap cleanup EXIT
@@ -157,7 +163,9 @@ main() {
     fi
 
     log_info "获取最新 skills..."
-    git clone --depth 1 "$REPO_URL" "$TEMP_DIR/skills-repo" 2>/dev/null || {
+    log_debug "clone source: $REPO_URL"
+    log_debug "clone target: $TEMP_DIR/skills-repo"
+    git clone --depth 1 "$REPO_URL" "$TEMP_DIR/skills-repo" || {
         log_error "克隆仓库失败"
         exit 1
     }

@@ -10,10 +10,12 @@ $ClaudeWorkflowsDir = Join-Path $env:USERPROFILE ".claude\workflows"
 $CodexWorkflowsDir = Join-Path $env:USERPROFILE ".codex\workflows"
 $TempDir = Join-Path $env:TEMP "ai-skills-$(Get-Random)"
 $PruneMode = if ($env:PRUNE_MODE) { $env:PRUNE_MODE.ToLower() } else { "off" }  # on/off
+$DebugMode = ($env:DEBUG -eq "1" -or $env:DEBUG -eq "true")
 
 function Write-Info { param($Message) Write-Host "[INFO] $Message" -ForegroundColor Green }
 function Write-Warn { param($Message) Write-Host "[WARN] $Message" -ForegroundColor Yellow }
 function Write-Err { param($Message) Write-Host "[ERROR] $Message" -ForegroundColor Red }
+function Write-DebugInfo { param($Message) if ($DebugMode) { Write-Host "[DEBUG] $Message" -ForegroundColor Cyan } }
 
 function Prune-RemovedDirs {
     param($TargetDir, $SourceDir, $TargetName, $ItemLabel)
@@ -131,8 +133,10 @@ function Main {
     }
 
     Write-Info "获取最新 skills..."
+    Write-DebugInfo "clone source: $RepoUrl"
+    Write-DebugInfo "clone target: $TempDir"
     try {
-        git clone --depth 1 $RepoUrl $TempDir 2>$null
+        git clone --depth 1 $RepoUrl $TempDir
     } catch {
         Write-Err "克隆仓库失败"
         exit 1

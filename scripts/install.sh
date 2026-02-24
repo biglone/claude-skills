@@ -24,6 +24,7 @@ INSTALL_TARGET="${INSTALL_TARGET:-}"
 # skip: 跳过已存在的 skill
 # force: 强制更新所有 skill
 UPDATE_MODE="${UPDATE_MODE:-ask}"
+DEBUG="${DEBUG:-0}"
 
 # 颜色输出
 RED='\033[0;31m'
@@ -42,6 +43,12 @@ log_warn() {
 
 log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
+}
+
+log_debug() {
+    if [ "$DEBUG" = "1" ]; then
+        echo -e "${CYAN}[DEBUG]${NC} $1"
+    fi
 }
 
 cleanup() {
@@ -116,7 +123,9 @@ create_skills_dirs() {
 
 clone_repo() {
     log_info "克隆 skills 仓库..."
-    git clone --depth 1 "$REPO_URL" "$TEMP_DIR/skills-repo" 2>/dev/null || {
+    log_debug "clone source: $REPO_URL"
+    log_debug "clone target: $TEMP_DIR/skills-repo"
+    git clone --depth 1 "$REPO_URL" "$TEMP_DIR/skills-repo" || {
         log_error "克隆仓库失败，请检查仓库地址: $REPO_URL"
         exit 1
     }

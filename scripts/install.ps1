@@ -15,6 +15,7 @@ $Script:InstalledSkills = @{
     "Claude Code" = New-Object System.Collections.Generic.List[string]
     "Codex CLI"   = New-Object System.Collections.Generic.List[string]
 }
+$DebugMode = ($env:DEBUG -eq "1" -or $env:DEBUG -eq "true")
 
 # 更新模式 (ask, skip, force)
 $UpdateMode = if ($env:UPDATE_MODE) { $env:UPDATE_MODE } else { "ask" }
@@ -22,6 +23,7 @@ $UpdateMode = if ($env:UPDATE_MODE) { $env:UPDATE_MODE } else { "ask" }
 function Write-Info { param($Message) Write-Host "[INFO] $Message" -ForegroundColor Green }
 function Write-Warn { param($Message) Write-Host "[WARN] $Message" -ForegroundColor Yellow }
 function Write-Err { param($Message) Write-Host "[ERROR] $Message" -ForegroundColor Red }
+function Write-DebugInfo { param($Message) if ($DebugMode) { Write-Host "[DEBUG] $Message" -ForegroundColor Cyan } }
 
 function Test-Git {
     try {
@@ -192,8 +194,10 @@ function Main {
 
     # 克隆仓库
     Write-Info "克隆 skills 仓库..."
+    Write-DebugInfo "clone source: $RepoUrl"
+    Write-DebugInfo "clone target: $TempDir"
     try {
-        git clone --depth 1 $RepoUrl $TempDir 2>$null
+        git clone --depth 1 $RepoUrl $TempDir
     } catch {
         Write-Err "克隆仓库失败，请检查仓库地址: $RepoUrl"
         exit 1
