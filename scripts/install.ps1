@@ -11,6 +11,10 @@ $CodexSkillsDir = Join-Path $env:USERPROFILE ".codex\skills"
 $ClaudeWorkflowsDir = Join-Path $env:USERPROFILE ".claude\workflows"
 $CodexWorkflowsDir = Join-Path $env:USERPROFILE ".codex\workflows"
 $TempDir = Join-Path $env:TEMP "ai-skills-$(Get-Random)"
+$Script:InstalledSkills = @{
+    "Claude Code" = New-Object System.Collections.Generic.List[string]
+    "Codex CLI"   = New-Object System.Collections.Generic.List[string]
+}
 
 # 更新模式 (ask, skip, force)
 $UpdateMode = if ($env:UPDATE_MODE) { $env:UPDATE_MODE } else { "ask" }
@@ -88,12 +92,14 @@ function Install-SkillsToDir {
             if (Test-ShouldUpdate -SkillName $SkillName -TargetName $TargetName) {
                 Remove-Item -Path $SkillTarget -Recurse -Force
                 Copy-Item -Path $_.FullName -Destination $TargetDir -Recurse
+                $Script:InstalledSkills[$TargetName].Add($SkillName)
                 Write-Info "[$TargetName] 已更新: $SkillName"
             } else {
                 Write-Warn "[$TargetName] 跳过: $SkillName"
             }
         } else {
             Copy-Item -Path $_.FullName -Destination $TargetDir -Recurse
+            $Script:InstalledSkills[$TargetName].Add($SkillName)
             Write-Info "[$TargetName] 已安装: $SkillName"
         }
     }
@@ -139,13 +145,21 @@ function Show-Installed {
     if (-not (Test-Path $SkillsDir)) { return }
 
     Write-Host ""
-    Write-Info "$Name 已安装的 Skills:"
+    Write-Info "$Name 本次安装/更新的 Skills:"
     Write-Host "─────────────────────────────────────────"
 
-    Get-ChildItem -Path $SkillsDir -Directory | ForEach-Object {
-        $SkillFile = Join-Path $_.FullName "SKILL.md"
+    $Changed = $Script:InstalledSkills[$Name] | Sort-Object -Unique
+    if (-not $Changed -or $Changed.Count -eq 0) {
+        Write-Host "  (无变更)" -ForegroundColor DarkGray
+        Write-Host "─────────────────────────────────────────"
+        return
+    }
+
+    $Changed | ForEach-Object {
+        $SkillName = $_
+        $SkillPath = Join-Path $SkillsDir $SkillName
+        $SkillFile = Join-Path $SkillPath "SKILL.md"
         if (Test-Path $SkillFile) {
-            $SkillName = $_.Name
             Write-Host "  • $SkillName" -ForegroundColor White
 
             $Content = Get-Content $SkillFile -Raw

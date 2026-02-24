@@ -13,6 +13,8 @@ CODEX_SKILLS_DIR="$HOME/.codex/skills"
 CLAUDE_WORKFLOWS_DIR="$HOME/.claude/workflows"
 CODEX_WORKFLOWS_DIR="$HOME/.codex/workflows"
 TEMP_DIR=$(mktemp -d)
+CLAUDE_INSTALLED_REPORT="$TEMP_DIR/claude-installed-skills.txt"
+CODEX_INSTALLED_REPORT="$TEMP_DIR/codex-installed-skills.txt"
 
 # 安装目标 (claude, codex, both)
 INSTALL_TARGET="${INSTALL_TARGET:-}"
@@ -86,6 +88,9 @@ select_target() {
 }
 
 create_skills_dirs() {
+    : > "$CLAUDE_INSTALLED_REPORT"
+    : > "$CODEX_INSTALLED_REPORT"
+
     if [ "$INSTALL_TARGET" = "claude" ] || [ "$INSTALL_TARGET" = "both" ]; then
         if [ ! -d "$CLAUDE_SKILLS_DIR" ]; then
             log_info "创建 Claude Code skills 目录: $CLAUDE_SKILLS_DIR"
@@ -145,6 +150,7 @@ ask_update_skill() {
 install_skills_to_dir() {
     local target_dir="$1"
     local target_name="$2"
+    local report_file="$3"
     local source_dir="$TEMP_DIR/skills-repo/skills"
 
     log_info "安装 skills 到 $target_name..."
@@ -158,12 +164,14 @@ install_skills_to_dir() {
                 if ask_update_skill "$skill_name" "$target_name"; then
                     rm -rf "$skill_target"
                     cp -r "$skill" "$target_dir/"
+                    echo "$skill_name" >> "$report_file"
                     log_info "[$target_name] 已更新: $skill_name"
                 else
                     log_warn "[$target_name] 跳过: $skill_name"
                 fi
             else
                 cp -r "$skill" "$target_dir/"
+                echo "$skill_name" >> "$report_file"
                 log_info "[$target_name] 已安装: $skill_name"
             fi
         fi
@@ -179,11 +187,11 @@ install_skills() {
     fi
 
     if [ "$INSTALL_TARGET" = "claude" ] || [ "$INSTALL_TARGET" = "both" ]; then
-        install_skills_to_dir "$CLAUDE_SKILLS_DIR" "Claude Code"
+        install_skills_to_dir "$CLAUDE_SKILLS_DIR" "Claude Code" "$CLAUDE_INSTALLED_REPORT"
     fi
 
     if [ "$INSTALL_TARGET" = "codex" ] || [ "$INSTALL_TARGET" = "both" ]; then
-        install_skills_to_dir "$CODEX_SKILLS_DIR" "Codex CLI"
+        install_skills_to_dir "$CODEX_SKILLS_DIR" "Codex CLI" "$CODEX_INSTALLED_REPORT"
     fi
 }
 
@@ -235,24 +243,32 @@ install_workflows() {
 show_installed() {
     local skills_dir="$1"
     local name="$2"
+    local report_file="$3"
 
     if [ ! -d "$skills_dir" ]; then
         return
     fi
 
     echo ""
-    log_info "$name 已安装的 Skills:"
+    log_info "$name 本次安装/更新的 Skills:"
     echo "─────────────────────────────────────────"
-    for skill in "$skills_dir"/*; do
+    if [ ! -s "$report_file" ]; then
+        echo "  (无变更)"
+        echo "─────────────────────────────────────────"
+        return
+    fi
+
+    while IFS= read -r skill_name; do
+        [ -z "$skill_name" ] && continue
+        skill="$skills_dir/$skill_name"
         if [ -d "$skill" ] && [ -f "$skill/SKILL.md" ]; then
-            skill_name=$(basename "$skill")
             desc=$(grep "^description:" "$skill/SKILL.md" 2>/dev/null | head -1 | sed 's/description: //')
             echo "  • $skill_name"
             if [ -n "$desc" ]; then
                 echo "    $desc"
             fi
         fi
-    done
+    done < <(sort -u "$report_file")
     echo "─────────────────────────────────────────"
 }
 
@@ -272,11 +288,11 @@ main() {
     install_workflows
 
     if [ "$INSTALL_TARGET" = "claude" ] || [ "$INSTALL_TARGET" = "both" ]; then
-        show_installed "$CLAUDE_SKILLS_DIR" "Claude Code"
+        show_installed "$CLAUDE_SKILLS_DIR" "Claude Code" "$CLAUDE_INSTALLED_REPORT"
     fi
 
     if [ "$INSTALL_TARGET" = "codex" ] || [ "$INSTALL_TARGET" = "both" ]; then
-        show_installed "$CODEX_SKILLS_DIR" "Codex CLI"
+        show_installed "$CODEX_SKILLS_DIR" "Codex CLI" "$CODEX_INSTALLED_REPORT"
     fi
 
     echo ""
