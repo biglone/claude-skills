@@ -14,6 +14,9 @@ usage() {
   --services-only         仅输出公开服务列表，不输出 tunnel 汇总
   -h, --help              显示帮助
 
+输出补充:
+  - 自动标记疑似“临时命名域名”（如子域名含日期/时间戳后缀）
+
 示例:
   list_exposed_services.sh
   list_exposed_services.sh --format tsv
@@ -218,8 +221,9 @@ TMP_TUNNEL_RAW="$(mktemp)"
 TMP_CONFIG_ROWS="$(mktemp)"
 TMP_SERVICES="$(mktemp)"
 TMP_SUMMARY="$(mktemp)"
+TMP_DOMAIN_WARNINGS="$(mktemp)"
 cleanup() {
-    rm -f "$TMP_TUNNEL_MAP" "$TMP_TUNNEL_RAW" "$TMP_CONFIG_ROWS" "$TMP_SERVICES" "$TMP_SUMMARY"
+    rm -f "$TMP_TUNNEL_MAP" "$TMP_TUNNEL_RAW" "$TMP_CONFIG_ROWS" "$TMP_SERVICES" "$TMP_SUMMARY" "$TMP_DOMAIN_WARNINGS"
 }
 trap cleanup EXIT
 
@@ -304,11 +308,32 @@ awk -F '\t' '
     }
 ' "$TMP_SERVICES" "$TMP_TUNNEL_MAP" >"$TMP_SUMMARY"
 
+awk -F '\t' '
+    function host_label(host, arr, n) {
+        n = split(host, arr, ".")
+        if (n >= 1) return arr[1]
+        return host
+    }
+    {
+        host = $1
+        if (host == "" || host == "-") next
+        label = host_label(host)
+
+        if (label ~ /-(19|20)[0-9]{6}$/ || label ~ /-[0-9]{8,}$/) {
+            print host "\tdate_or_timestamp_suffix\t建议改为稳定、简短子域名（如 todo.example.com）"
+        }
+    }
+' "$TMP_SERVICES" | sort -u >"$TMP_DOMAIN_WARNINGS"
+
 SERVICE_HEADER=$'HOSTNAME\tSERVICE\tTUNNEL_NAME\tTUNNEL_ID\tCREATED_AT\tCONNECTIONS\tCONFIG_FILE\tCREDENTIALS_FILE'
 SUMMARY_HEADER=$'TUNNEL_NAME\tTUNNEL_ID\tCREATED_AT\tCONNECTIONS\tPUBLIC_SERVICE_COUNT\tCONFIG_FILES'
+DOMAIN_WARNING_HEADER=$'HOSTNAME\tISSUE\tRECOMMENDATION'
 
 print_block "Exposed Services" "$SERVICE_HEADER" "$TMP_SERVICES" "$FORMAT"
 echo "Total services: $(wc -l < "$TMP_SERVICES" | tr -d ' ')"
+echo
+print_block "Domain Naming Warnings" "$DOMAIN_WARNING_HEADER" "$TMP_DOMAIN_WARNINGS" "$FORMAT"
+echo "Total naming warnings: $(wc -l < "$TMP_DOMAIN_WARNINGS" | tr -d ' ')"
 
 if [ "$SERVICES_ONLY" -eq 0 ]; then
     echo

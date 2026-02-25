@@ -19,11 +19,16 @@ usage() {
   --run-now                    创建完成后立即前台启动 tunnel
   -h, --help                   显示帮助
 
+命名建议:
+  - domain 建议使用稳定、简短的子域名（如 todo.example.com）
+  - tunnel-name 可用于运维标识（可与 domain 不同）
+  - 避免使用带日期后缀的域名（如 xxx-20260225.example.com）
+
 示例:
   create_or_update_tunnel.sh \
-    --domain app.example.com \
-    --service http://127.0.0.1:3000 \
-    --tunnel-name local-app
+    --domain todo.example.com \
+    --service http://127.0.0.1:18080 \
+    --tunnel-name todo-harbor-20260225
 EOF
 }
 
@@ -78,6 +83,23 @@ validate_service() {
     if ! printf '%s' "$service" | grep -Eq '^[a-zA-Z][a-zA-Z0-9+.-]*://'; then
         err "本地服务地址必须包含协议，例如 http://127.0.0.1:3000"
         exit 1
+    fi
+}
+
+warn_domain_naming() {
+    local domain="$1"
+    local tunnel_name="$2"
+    local host_label
+    host_label="${domain%%.*}"
+
+    if printf '%s' "$host_label" | grep -Eq -- '-(19|20)[0-9]{6}$|-[0-9]{8,}$'; then
+        warn "域名子域名疑似包含日期/时间戳后缀: $host_label"
+        warn "建议改为稳定入口域名（例如 todo.example.com），而非临时命名。"
+    fi
+
+    if [ "$host_label" = "$tunnel_name" ] && printf '%s' "$tunnel_name" | grep -Eq -- '-(19|20)[0-9]{6}$|-[0-9]{8,}$'; then
+        warn "当前 domain 与 tunnel-name 相同，且 tunnel-name 含日期/时间戳后缀。"
+        warn "建议将 domain 与 tunnel-name 解耦，避免暴露临时命名。"
     fi
 }
 
@@ -147,6 +169,7 @@ fi
 require_cmd cloudflared
 require_cmd sed
 require_cmd grep
+warn_domain_naming "$DOMAIN" "$TUNNEL_NAME"
 
 if [ "$(uname -s)" != "Linux" ]; then
     warn "当前系统不是 Linux，脚本继续执行但未针对该系统验证。"

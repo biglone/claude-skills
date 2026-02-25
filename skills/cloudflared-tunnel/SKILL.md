@@ -14,6 +14,32 @@ related-skills: bug-finder, security-audit, technical-writer
 - 本地服务地址（必须带协议），例如 `http://127.0.0.1:3000`
 - 域名（已接入 Cloudflare DNS），例如 `app.example.com`
 - tunnel 名称（可选；未提供时根据域名自动生成）
+  - 注意：`domain` 和 `tunnel-name` 是两个独立概念，不要求同名
+
+## 域名命名规范（强约束）
+
+- 域名用于对外访问，应优先选择“稳定、短、可长期复用”的子域名。
+- 不要把临时 tunnel 名称（尤其带日期/流水号）直接当作正式域名。
+- 推荐把 tunnel 命名和公网域名解耦：
+  - `tunnel-name` 可以偏运维标识（可含日期、环境、批次）
+  - `domain` 应偏产品入口（简洁、稳定）
+- 子域名推荐模式：
+  - `service.example.com`
+  - `service-env.example.com`（仅在确实有环境区分时）
+- 不推荐模式：
+  - `service-20260225.example.com`（日期后缀）
+  - `service-<timestamp>.example.com`（时间戳）
+  - `service-<random>.example.com`（随机串）
+- 示例：
+  - 推荐：`https://todo.biglone.tech`
+  - 可接受：`https://todo-harbor.biglone.tech`
+  - 不推荐：`https://todo-harbor-20260225.biglone.tech`
+
+当用户未明确给出域名时：
+
+1. 先询问希望使用的稳定子域名；
+2. 若需要代拟，优先给 1-2 个简洁候选（不含日期/随机串）；
+3. 明确告知“域名不会自动等同于 tunnel-name”。
 
 ## 先决条件检查
 
@@ -35,9 +61,9 @@ cloudflared tunnel login
 
 ```bash
 bash scripts/create_or_update_tunnel.sh \
-  --domain app.example.com \
-  --service http://127.0.0.1:3000 \
-  --tunnel-name local-app
+  --domain todo.biglone.tech \
+  --service http://127.0.0.1:18080 \
+  --tunnel-name todo-harbor-20260225
 ```
 
 常用可选参数：
@@ -118,6 +144,27 @@ ingress:
 
 ```bash
 cloudflared tunnel --config ~/.cloudflared/local-app.yml run
+```
+
+## 域名优化与迁移（去掉日期后缀）
+
+如果当前已在使用类似 `todo-harbor-20260225.biglone.tech` 的域名，推荐迁移为稳定域名（如 `todo.biglone.tech`）：
+
+```bash
+# 1) 给同一个 tunnel 绑定新的稳定域名
+cloudflared tunnel route dns <tunnel-name-or-id> todo.biglone.tech
+
+# 2) 修改配置文件里的 ingress.hostname 为新域名
+#   ~/.cloudflared/<tunnel-name>.yml
+
+# 3) 重启常驻服务
+sudo systemctl restart cloudflared-<tunnel-name>.service
+
+# 4) 验证新域名
+curl -I https://todo.biglone.tech
+
+# 5) 确认稳定后，删除旧域名路由（可选）
+cloudflared tunnel route dns delete todo-harbor-20260225.biglone.tech
 ```
 
 ## 验证与回归检查

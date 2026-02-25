@@ -37,6 +37,15 @@ bash scripts/list_exposed_services.sh
 - config file
 - credentials file
 
+### Domain Naming Warnings
+
+输出疑似“临时域名命名”风险项，当前重点标记：
+
+- 子域名含日期后缀（如 `todo-harbor-20260225.example.com`）
+- 子域名含长数字时间戳后缀（如 `service-1738493021.example.com`）
+
+建议将这类入口迁移为稳定、简短、长期可复用的子域名（如 `todo.example.com`）。
+
 ### Tunnel Summary
 
 按 tunnel 汇总：
@@ -51,8 +60,9 @@ bash scripts/list_exposed_services.sh
 
 1. 运行 `bash scripts/list_exposed_services.sh`
 2. 确认 hostname 对应 service 是否符合预期
-3. 检查是否存在不应暴露的服务端口
-4. 对不需要的入口执行清理（DNS 路由、tunnel 配置、systemd 服务）
+3. 检查 `Domain Naming Warnings` 是否出现日期/时间戳后缀域名
+4. 检查是否存在不应暴露的服务端口
+5. 对不需要或命名不规范的入口执行清理与迁移（DNS 路由、tunnel 配置、systemd 服务）
 
 ## 故障排查
 
