@@ -168,6 +168,9 @@ irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install
 | `SKILLS_REPO` | install/update | Git URL | 自定义仓库地址（默认官方仓库） |
 | `INSTALL_TARGET` | install | `claude` / `codex` / `both` | 安装目标平台 |
 | `UPDATE_MODE` | install | `ask` / `skip` / `force` | 处理本地已存在 skill 的策略 |
+| `CODEX_AUTO_UPDATE_SETUP` | install | `on` / `off` | 是否自动配置 Codex 启动前检查并更新 skills（仅 macOS/Linux） |
+| `CODEX_AUTO_UPDATE_REPO` | install | `owner/repo` | Codex 自动更新检查使用的 GitHub 仓库（默认按 `SKILLS_REPO` 推断） |
+| `CODEX_AUTO_UPDATE_BRANCH` | install | 分支名 | Codex 自动更新检查使用的分支（默认 `main`） |
 | `UPDATE_TARGET` | update | `claude` / `codex` / `both` | 更新目标平台 |
 | `PRUNE_MODE` | update | `on` / `off` | 是否清理本地已下线的 skill/workflow |
 | `UNINSTALL_TARGET` | uninstall | `claude` / `codex` / `both` | 卸载目标平台 |
@@ -181,6 +184,11 @@ irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install
 **PRUNE_MODE 说明（update 脚本）：**
 - `off` (默认): 只更新/新增，不删除本地多余目录
 - `on`: 同步清理远端已下线的 skill/workflow
+
+**Codex 自动更新说明（install 脚本）：**
+- `CODEX_AUTO_UPDATE_SETUP=on` (默认): 安装后自动写入 `~/.codex/codex-skills-auto-update.sh`，并注入 `~/.bashrc` / `~/.zshrc`
+- `CODEX_AUTO_UPDATE_SETUP=off`: 不自动配置启动前更新
+- 运行时可临时禁用：`CODEX_SKILLS_AUTO_UPDATE=0 codex`
 
 **macOS / Linux:**
 ```bash
@@ -202,6 +210,17 @@ $env:INSTALL_TARGET="claude"; irm https://raw.githubusercontent.com/biglone/clau
 # 强制更新所有 skills
 $env:UPDATE_MODE="force"; irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
 ```
+
+### Codex 启动前自动更新（macOS / Linux）
+
+当安装目标包含 Codex（`INSTALL_TARGET=codex` 或 `both`）时，`install.sh` 会自动：
+
+1. 写入本地版本文件 `~/.codex/.skills_version`
+2. 生成启动器 `~/.codex/codex-skills-auto-update.sh`
+3. 将启动器 `source` 注入 `~/.bashrc` 和 `~/.zshrc`（幂等覆盖）
+
+之后每次执行 `codex` 都会先检查远端 `scripts/manifest/version.txt`，若版本变化则自动执行远程安装更新。
+仓库维护时请同步更新 `scripts/manifest/version.txt`，以触发客户端自动更新。
 
 ### 手动安装
 
