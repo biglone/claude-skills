@@ -3,9 +3,15 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SKILLS_DIR="$ROOT_DIR/skills"
+SKILLS_MANIFEST="$ROOT_DIR/scripts/manifest/skills.txt"
 
 errors=0
 warnings=0
+HAS_RG=0
+
+if command -v rg >/dev/null 2>&1; then
+    HAS_RG=1
+fi
 
 log_info() {
     echo "[INFO] $1"
@@ -19,6 +25,35 @@ log_warn() {
 log_error() {
     echo "[ERROR] $1"
     errors=$((errors + 1))
+}
+
+matches_ci() {
+    local pattern="$1"
+    if [ "$HAS_RG" -eq 1 ]; then
+        rg -qi -- "$pattern"
+    else
+        grep -Eqi -- "$pattern"
+    fi
+}
+
+extract_references() {
+    local file="$1"
+    if [ "$HAS_RG" -eq 1 ]; then
+        rg -o 'references/[A-Za-z0-9._/-]+\.md' "$file" | sort -u || true
+    else
+        grep -Eo 'references/[A-Za-z0-9._/-]+\.md' "$file" | sort -u || true
+    fi
+}
+
+search_md_fixed() {
+    local pattern="$1"
+    local path="$2"
+    if [ "$HAS_RG" -eq 1 ]; then
+        rg -n --fixed-strings "$pattern" "$path" -g '*.md' || true
+    else
+        find "$path" -type f -name '*.md' -print0 \
+            | xargs -0 grep -nH -F -- "$pattern" || true
+    fi
 }
 
 validate_frontmatter() {
@@ -65,7 +100,7 @@ validate_frontmatter() {
     fi
 
     if [ -n "$description" ]; then
-        if ! printf "%s\n" "$description" | rg -qi "当用户|use when|when"; then
+        if ! printf "%s\n" "$description" | matches_ci "当用户|use when|when"; then
             log_warn "$folder_name: description 建议显式包含触发条件"
         fi
     fi
@@ -98,7 +133,7 @@ validate_reference_links() {
         if [ ! -f "$skill_dir/$rel" ]; then
             log_error "$folder_name: 引用文件不存在 -> $rel"
         fi
-    done < <(rg -o 'references/[A-Za-z0-9._/-]+\.md' "$skill_file" | sort -u || true)
+    done < <(extract_references "$skill_file")
 }
 
 validate_length() {
@@ -129,7 +164,7 @@ validate_dangerous_patterns() {
     local matched=0
     for pattern in "${patterns[@]}"; do
         local hits
-        hits="$(rg -n --fixed-strings "$pattern" "$skill_dir" -g '*.md' || true)"
+        hits="$(search_md_fixed "$pattern" "$skill_dir")"
         if [ -n "$hits" ]; then
             if [ "$matched" -eq 0 ]; then
                 log_error "$folder_name: 检测到危险命令示例"
@@ -145,16 +180,38 @@ main() {
         echo "[ERROR] skills 目录不存在: $SKILLS_DIR"
         exit 1
     fi
+    if [ ! -f "$SKILLS_MANIFEST" ]; then
+        echo "[ERROR] skills 清单不存在: $SKILLS_MANIFEST"
+        exit 1
+    fi
 
     log_info "开始校验 skills 目录: $SKILLS_DIR"
+    log_info "使用清单: $SKILLS_MANIFEST"
 
-    while IFS= read -r skill_dir; do
+    local skill_count=0
+    while IFS= read -r skill_name; do
+        [ -z "$skill_name" ] && continue
+        case "$skill_name" in
+            \#*) continue ;;
+        esac
+
+        local skill_dir="$SKILLS_DIR/$skill_name"
+        if [ ! -d "$skill_dir" ]; then
+            log_error "$skill_name: 目录不存在"
+            continue
+        fi
+
+        skill_count=$((skill_count + 1))
         validate_frontmatter "$skill_dir"
         validate_code_fences "$skill_dir"
         validate_reference_links "$skill_dir"
         validate_length "$skill_dir"
         validate_dangerous_patterns "$skill_dir"
-    done < <(find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
+    done < "$SKILLS_MANIFEST"
+
+    if [ "$skill_count" -eq 0 ]; then
+        log_error "未发现任何 SKILL.md，无法执行校验"
+    fi
 
     echo
     echo "校验完成: errors=$errors warnings=$warnings"
