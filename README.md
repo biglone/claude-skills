@@ -210,13 +210,22 @@ curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/
 curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | UPDATE_MODE=skip INSTALL_TARGET=both bash
 ```
 
-**Windows:**
+**Windows (PowerShell):**
 ```powershell
 # 只安装到 Claude Code
 $env:INSTALL_TARGET="claude"; irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
 
 # 强制更新所有 skills
 $env:UPDATE_MODE="force"; irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
+```
+
+**Windows (cmd):**
+```cmd
+:: 只安装到 Claude Code
+set "INSTALL_TARGET=claude" && powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | Invoke-Expression"
+
+:: 强制更新所有 skills
+set "UPDATE_MODE=force" && powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | Invoke-Expression"
 ```
 
 ### Codex 启动前自动更新（macOS / Linux）
@@ -263,11 +272,12 @@ Copy-Item -Recurse claude-skills\skills\* $env:USERPROFILE\.codex\skills\
 curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/update.sh | bash
 ```
 
-**Windows:**
+**Windows (PowerShell):**
 ```powershell
 irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/update.ps1 | iex
 ```
 
+**Windows (cmd):**
 ```cmd
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/update.ps1 | Invoke-Expression"
 ```
@@ -279,9 +289,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https:
 curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/uninstall.sh | bash
 ```
 
-**Windows:**
+**Windows (PowerShell):**
 ```powershell
 irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/uninstall.ps1 | iex
+```
+
+**Windows (cmd):**
+```cmd
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/uninstall.ps1 | Invoke-Expression"
 ```
 
 ## 目录结构
