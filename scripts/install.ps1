@@ -18,12 +18,45 @@ $Script:InstalledSkills = @{
 $DebugMode = ($env:DEBUG -eq "1" -or $env:DEBUG -eq "true")
 
 # 更新模式 (ask, skip, force)
-$UpdateMode = if ($env:UPDATE_MODE) { $env:UPDATE_MODE } else { "ask" }
+$UpdateMode = if ($env:UPDATE_MODE) { $env:UPDATE_MODE.Trim().ToLowerInvariant() } else { "ask" }
 
 function Write-Info { param($Message) Write-Host "[INFO] $Message" -ForegroundColor Green }
 function Write-Warn { param($Message) Write-Host "[WARN] $Message" -ForegroundColor Yellow }
 function Write-Err { param($Message) Write-Host "[ERROR] $Message" -ForegroundColor Red }
 function Write-DebugInfo { param($Message) if ($DebugMode) { Write-Host "[DEBUG] $Message" -ForegroundColor Cyan } }
+
+function Test-InteractiveSession {
+    try {
+        return (-not [Console]::IsInputRedirected) -and (-not [Console]::IsOutputRedirected)
+    } catch {
+        return $false
+    }
+}
+
+function Resolve-UpdateMode {
+    param([string]$Mode)
+
+    $Normalized = if ([string]::IsNullOrWhiteSpace($Mode)) { "ask" } else { $Mode.Trim().ToLowerInvariant() }
+    if ($Normalized -notin @("ask", "skip", "force")) {
+        throw "UPDATE_MODE 无效: '$Mode'。可选值: ask / skip / force"
+    }
+
+    return $Normalized
+}
+
+function Resolve-InstallTargetFromEnv {
+    if ([string]::IsNullOrWhiteSpace($env:INSTALL_TARGET)) {
+        return $null
+    }
+
+    $Target = $env:INSTALL_TARGET.Trim().ToLowerInvariant()
+    switch ($Target) {
+        "claude" { return "claude" }
+        "codex" { return "codex" }
+        "both" { return "both" }
+        default { throw "INSTALL_TARGET 无效: '$($env:INSTALL_TARGET)'。可选值: claude / codex / both" }
+    }
+}
 
 function Test-Git {
     try {
@@ -35,8 +68,9 @@ function Test-Git {
 }
 
 function Select-Target {
-    if ($env:INSTALL_TARGET) {
-        return $env:INSTALL_TARGET
+    $TargetFromEnv = Resolve-InstallTargetFromEnv
+    if ($TargetFromEnv) {
+        return $TargetFromEnv
     }
 
     Write-Host ""
@@ -66,7 +100,12 @@ function Test-ShouldUpdate {
         return $true
     }
 
-    # ask 模式：询问用户
+    # ask 模式：仅在可交互会话中询问，避免 CI / 重定向环境卡住
+    if (-not (Test-InteractiveSession)) {
+        Write-Warn "[$TargetName] 非交互环境且 UPDATE_MODE=ask，自动按 skip 处理: $SkillName"
+        return $false
+    }
+
     Write-Host ""
     $answer = Read-Host "[$TargetName] Skill '$SkillName' 已存在，是否更新? [y/N]"
 
@@ -187,6 +226,9 @@ function Main {
     $Succeeded = $false
 
     try {
+        # 校验并归一化更新策略
+        $script:UpdateMode = Resolve-UpdateMode -Mode $UpdateMode
+
         # 检查 Git
         if (-not (Test-Git)) {
             throw "Git 未安装，请先安装 Git"
