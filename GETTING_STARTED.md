@@ -27,6 +27,13 @@ curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/
 irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
 ```
 
+**Windows (cmd):**
+```cmd
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | Invoke-Expression"
+```
+
+说明：`irm` 是 PowerShell 命令别名，在 `cmd` 里不能直接执行。
+
 ### 方式 2：手动安装
 
 ```bash

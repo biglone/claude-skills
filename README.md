@@ -159,6 +159,14 @@ curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/
 irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
 ```
 
+### Windows (cmd)
+
+```cmd
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | Invoke-Expression"
+```
+
+说明：`irm` 是 PowerShell 的 `Invoke-RestMethod` 别名，在 `cmd` 中不可直接使用。
+
 ### 环境变量配置
 
 通过环境变量控制安装/更新/卸载行为：
@@ -248,6 +256,8 @@ Copy-Item -Recurse claude-skills\skills\* $env:USERPROFILE\.codex\skills\
 
 ## 更新 Skills
 
+首次使用请运行安装脚本（`install.sh` / `install.ps1`），`update` 脚本用于已安装后的日常同步更新。
+
 **macOS / Linux:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/update.sh | bash
@@ -256,6 +266,10 @@ curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/
 **Windows:**
 ```powershell
 irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/update.ps1 | iex
+```
+
+```cmd
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/update.ps1 | Invoke-Expression"
 ```
 
 ## 卸载 Skills
