@@ -2,7 +2,6 @@
 name: autonomous-dev
 description: 自主开发模式。让 AI 自主完成完整开发任务，无需每步确认。当用户要求"自主开发"、"自动完成"、"全自动"时使用。
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
-related-skills: auto-code-pipeline, auto-fix-loop, code-reviewer, test-generator
 ---
 
 # 自主开发模式
@@ -57,7 +56,15 @@ related-skills: auto-code-pipeline, auto-fix-loop, code-reviewer, test-generator
 
 - 总结改动文件、关键决策、测试结果、剩余风险。
 - 生成 commit message。
-- 仅在用户明确要求时执行 `git commit`；不自动 `push`。
+- 默认仅在用户明确要求时执行 `git commit`；不自动 `push`。
+
+## 提交策略（重要）
+
+- 若用户已给出提交节奏偏好（例如“每个功能改完就提交”“小步提交”），必须遵循该偏好覆盖默认规则。
+- 采用“单一功能单提交”：每次提交只包含一个可独立描述的功能或修复，避免把多个功能混在同一提交。
+- 每次提交前至少完成该功能对应的最小验证（受影响测试/关键命令），并在汇报中说明验证结果。
+- 若当前改动跨多个功能，先拆分并分批提交，再继续下一功能开发。
+- 用户未要求 `push` 时，始终不执行远程推送操作。
 
 ## 自动继续与暂停条件
 

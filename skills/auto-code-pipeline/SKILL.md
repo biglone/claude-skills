@@ -2,7 +2,6 @@
 name: auto-code-pipeline
 description: 自动代码流水线。写完代码后自动执行 lint、test、review 流程。当用户要求"自动流水线"、"CI流程"、"自动检查"时使用。
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
-related-skills: autonomous-dev, auto-fix-loop, code-reviewer, test-generator, bug-finder
 ---
 
 # 自动代码流水线
@@ -93,6 +92,14 @@ cargo test        # Rust
 
 可以提交代码。
 ```
+
+## 提交策略（重要）
+
+- 若用户已声明提交节奏（例如“每个功能改完就提交”“小步提交”），流水线结束后必须遵循该节奏。
+- 采用“单一功能单提交”：一次提交仅包含一个可独立描述的功能/修复，不把多个功能混在一个提交。
+- 每次提交前至少完成该功能对应的最小验证（受影响测试或关键命令），并在汇报中写明验证结果。
+- 若当前改动跨多个功能，先拆分改动并分批执行流水线与提交，再继续后续开发。
+- 用户未明确要求时不执行 `git push`；仅可在用户明确要求时执行远程推送。
 
 ## 快速触发
 
