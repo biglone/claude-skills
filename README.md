@@ -2,6 +2,8 @@
 
 一个可共享的 AI 助手 Skills 仓库，支持 **Claude Code** 和 **OpenAI Codex CLI**，方便团队成员和多设备快速安装使用。
 
+> 📝 仓库已从 `claude-skills` 更名为 `agent-skills`。旧地址会被 GitHub 重定向，建议尽快切换到新地址以避免后续失效。
+
 ## 支持的平台
 
 | 平台 | Skills 目录 |
@@ -146,6 +148,7 @@
 ## 快速安装
 
 运行安装脚本后，会提示选择安装目标（Claude Code / Codex CLI / 两者都安装）。
+安装与更新均按 `scripts/manifest/skills.txt` / `scripts/manifest/workflows.txt` 执行，不会扫描并安装内部目录。
 
 ### macOS / Linux
 
@@ -174,11 +177,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https:
 | 变量 | 适用脚本 | 值 | 说明 |
 |------|----------|-----|------|
 | `SKILLS_REPO` | install/update | Git URL | 自定义仓库地址（默认官方仓库） |
+| `SKILLS_REF` | install/update | 分支/Tag/提交 | 安装或更新来源版本（默认 `main`，支持发布 Tag） |
 | `INSTALL_TARGET` | install | `claude` / `codex` / `both` | 安装目标平台 |
 | `UPDATE_MODE` | install | `ask` / `skip` / `force` | 处理本地已存在 skill 的策略 |
-| `CODEX_AUTO_UPDATE_SETUP` | install | `on` / `off` | 是否自动配置 Codex 启动前检查并更新 skills（仅 macOS/Linux） |
+| `NON_INTERACTIVE` | install | `1` / `true` | 非交互模式（默认目标 `both`） |
+| `DRY_RUN` | install | `1` / `true` | 仅打印计划，不写入目标目录 |
+| `CODEX_AUTO_UPDATE_SETUP` | install | `on` / `off` | 是否自动配置 Codex 启动前检查并更新 skills |
 | `CODEX_AUTO_UPDATE_REPO` | install | `owner/repo` | Codex 自动更新检查使用的 GitHub 仓库（默认按 `SKILLS_REPO` 推断） |
-| `CODEX_AUTO_UPDATE_BRANCH` | install | 分支名 | Codex 自动更新检查使用的分支（默认 `main`） |
+| `CODEX_AUTO_UPDATE_BRANCH` | install | 分支/Tag | Codex 自动更新检查使用的版本引用（默认跟随 `SKILLS_REF`） |
 | `UPDATE_TARGET` | update | `claude` / `codex` / `both` | 更新目标平台 |
 | `PRUNE_MODE` | update | `on` / `off` | 是否清理本地已下线的 skill/workflow |
 | `UNINSTALL_TARGET` | uninstall | `claude` / `codex` / `both` | 卸载目标平台 |
@@ -194,7 +200,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https:
 - `on`: 同步清理远端已下线的 skill/workflow
 
 **Codex 自动更新说明（install 脚本）：**
-- `CODEX_AUTO_UPDATE_SETUP=on` (默认): 安装后自动写入 `~/.codex/codex-skills-auto-update.sh`，并注入 `~/.bashrc` / `~/.zshrc`
+- `CODEX_AUTO_UPDATE_SETUP=on` (默认): 
+  - macOS/Linux: 写入 `~/.codex/codex-skills-auto-update.sh` 并注入 `~/.bashrc` / `~/.zshrc`
+  - Windows PowerShell: 写入 `~/.codex/codex-skills-auto-update.ps1` 并注入 PowerShell profile
 - `CODEX_AUTO_UPDATE_SETUP=off`: 不自动配置启动前更新
 - 运行时可临时禁用：`CODEX_SKILLS_AUTO_UPDATE=0 codex`
 
@@ -228,13 +236,42 @@ set "INSTALL_TARGET=claude" && powershell -NoProfile -ExecutionPolicy Bypass -Co
 set "UPDATE_MODE=force" && powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.ps1 | Invoke-Expression"
 ```
 
-### Codex 启动前自动更新（macOS / Linux）
+### 非交互与 Dry Run
 
-当安装目标包含 Codex（`INSTALL_TARGET=codex` 或 `both`）时，`install.sh` 会自动：
+**macOS / Linux:**
+```bash
+# 非交互安装
+curl -fsSL https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.sh | NON_INTERACTIVE=1 bash
+
+# 仅预览变更（不写入）
+curl -fsSL https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.sh | NON_INTERACTIVE=1 DRY_RUN=1 bash
+```
+
+**Windows PowerShell（本地脚本）:**
+```powershell
+.\scripts\install.ps1 --non-interactive
+.\scripts\install.ps1 --non-interactive --dry-run
+```
+
+### 发布版本安装（Tag/Release）
+
+当需要稳定版本时，建议使用发布 Tag 安装/更新（例如 `v1.2.0`）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/biglone/agent-skills/v1.2.0/scripts/install.sh | SKILLS_REF=v1.2.0 UPDATE_MODE=force INSTALL_TARGET=both bash
+```
+
+```powershell
+$env:SKILLS_REF="v1.2.0"; $env:UPDATE_MODE="force"; irm https://raw.githubusercontent.com/biglone/agent-skills/v1.2.0/scripts/install.ps1 | iex
+```
+
+### Codex 启动前自动更新（macOS / Linux / Windows PowerShell）
+
+当安装目标包含 Codex（`INSTALL_TARGET=codex` 或 `both`）时，安装脚本会自动：
 
 1. 写入本地版本文件 `~/.codex/.skills_version`
-2. 生成启动器 `~/.codex/codex-skills-auto-update.sh`
-3. 将启动器 `source` 注入 `~/.bashrc` 和 `~/.zshrc`（幂等覆盖）
+2. 生成启动器（macOS/Linux: `codex-skills-auto-update.sh`；Windows: `codex-skills-auto-update.ps1`）
+3. 将启动器注入 shell/profile（幂等覆盖）
 
 之后每次执行 `codex` 都会先检查远端 `scripts/manifest/version.txt`，若版本变化则自动执行远程安装更新。
 仓库维护时请同步更新 `scripts/manifest/version.txt`，以触发客户端自动更新。
@@ -280,6 +317,12 @@ irm https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/update.p
 **Windows (cmd):**
 ```cmd
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/update.ps1 | Invoke-Expression"
+```
+
+使用发布 Tag 更新（示例）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/biglone/agent-skills/v1.2.0/scripts/update.sh | SKILLS_REF=v1.2.0 UPDATE_TARGET=both bash
 ```
 
 ## 卸载 Skills

@@ -6,11 +6,14 @@
 set -euo pipefail
 
 REPO_URL="${SKILLS_REPO:-https://github.com/biglone/agent-skills.git}"
+SKILLS_REF="${SKILLS_REF:-main}"
 CLAUDE_SKILLS_DIR="$HOME/.claude/skills"
 CODEX_SKILLS_DIR="$HOME/.codex/skills"
 CLAUDE_WORKFLOWS_DIR="$HOME/.claude/workflows"
 CODEX_WORKFLOWS_DIR="$HOME/.codex/workflows"
 TEMP_DIR=$(mktemp -d)
+SKILLS_MANIFEST_FILE=""
+WORKFLOWS_MANIFEST_FILE=""
 
 UPDATE_TARGET="${UPDATE_TARGET:-}"
 PRUNE_MODE="${PRUNE_MODE:-off}"  # on/off: 是否清理本地已下线的 skill/workflow
@@ -34,19 +37,68 @@ log_debug() {
 cleanup() { rm -rf "$TEMP_DIR"; }
 trap cleanup EXIT
 
+read_manifest_entries() {
+    local manifest_file="$1"
+    while IFS= read -r line; do
+        local item
+        item="$(printf '%s' "$line" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
+        [ -z "$item" ] && continue
+        case "$item" in \#*) continue ;; esac
+        printf '%s\n' "$item"
+    done < "$manifest_file"
+}
+
+manifest_contains() {
+    local manifest_file="$1"
+    local needle="$2"
+    awk -v item="$needle" '
+        {
+            line=$0
+            sub(/^[[:space:]]+/, "", line)
+            sub(/[[:space:]]+$/, "", line)
+            if (line == "" || substr(line,1,1) == "#") next
+            if (line == item) { found=1; exit }
+        }
+        END { exit found ? 0 : 1 }
+    ' "$manifest_file"
+}
+
+set_manifests() {
+    SKILLS_MANIFEST_FILE="$TEMP_DIR/skills-repo/scripts/manifest/skills.txt"
+    WORKFLOWS_MANIFEST_FILE="$TEMP_DIR/skills-repo/scripts/manifest/workflows.txt"
+
+    if [ ! -f "$SKILLS_MANIFEST_FILE" ]; then
+        log_error "skills manifest 不存在: $SKILLS_MANIFEST_FILE"
+        exit 1
+    fi
+    if [ ! -f "$WORKFLOWS_MANIFEST_FILE" ]; then
+        log_warn "workflows manifest 不存在: $WORKFLOWS_MANIFEST_FILE"
+    fi
+}
+
+validate_update_target() {
+    case "$UPDATE_TARGET" in
+        ""|claude|codex|both) ;;
+        *)
+            log_error "UPDATE_TARGET 无效: $UPDATE_TARGET（可选 claude/codex/both）"
+            exit 1
+            ;;
+    esac
+}
+
 prune_removed_dirs() {
     local target_dir="$1"
-    local source_dir="$2"
+    local manifest_file="$2"
     local target_name="$3"
     local item_label="$4"
 
     [ -d "$target_dir" ] || return
-    [ -d "$source_dir" ] || return
+    [ -f "$manifest_file" ] || return
 
     for item in "$target_dir"/*; do
         [ -d "$item" ] || continue
         item_name=$(basename "$item")
-        if [ ! -d "$source_dir/$item_name" ]; then
+        if ! manifest_contains "$manifest_file" "$item_name"; then
             rm -rf "$item"
             log_info "[$target_name] 清理已下线 $item_label: $item_name"
         fi
@@ -55,6 +107,7 @@ prune_removed_dirs() {
 
 select_target() {
     if [ -n "$UPDATE_TARGET" ]; then
+        UPDATE_TARGET="$(printf '%s' "$UPDATE_TARGET" | tr '[:upper:]' '[:lower:]')"
         return
     fi
 
@@ -89,23 +142,27 @@ update_skills_in_dir() {
         mkdir -p "$target_dir"
     fi
 
-    for skill in "$source_dir"/*; do
-        if [ -d "$skill" ]; then
-            skill_name=$(basename "$skill")
-            skill_target="$target_dir/$skill_name"
+    while IFS= read -r skill_name; do
+        [ -z "$skill_name" ] && continue
+        local skill="$source_dir/$skill_name"
+        local skill_target="$target_dir/$skill_name"
 
-            if [ -d "$skill_target" ]; then
-                rm -rf "$skill_target"
-                log_info "[$target_name] 更新: $skill_name"
-            else
-                log_info "[$target_name] 新增: $skill_name"
-            fi
-            cp -r "$skill" "$target_dir/"
+        if [ ! -d "$skill" ]; then
+            log_warn "[$target_name] manifest 中的 skill 不存在，跳过: $skill_name"
+            continue
         fi
-    done
+
+        if [ -d "$skill_target" ]; then
+            rm -rf "$skill_target"
+            log_info "[$target_name] 更新: $skill_name"
+        else
+            log_info "[$target_name] 新增: $skill_name"
+        fi
+        cp -r "$skill" "$target_dir/"
+    done < <(read_manifest_entries "$SKILLS_MANIFEST_FILE")
 
     if [ "$PRUNE_MODE" = "on" ]; then
-        prune_removed_dirs "$target_dir" "$source_dir" "$target_name" "skill"
+        prune_removed_dirs "$target_dir" "$SKILLS_MANIFEST_FILE" "$target_name" "skill"
     fi
 }
 
@@ -118,28 +175,36 @@ update_workflows_in_dir() {
         log_warn "workflows 目录不存在，跳过"
         return
     fi
+    if [ ! -f "$WORKFLOWS_MANIFEST_FILE" ]; then
+        log_warn "workflows manifest 不存在，跳过"
+        return
+    fi
 
     if [ ! -d "$target_dir" ]; then
         mkdir -p "$target_dir"
     fi
 
-    for workflow in "$source_dir"/*; do
-        if [ -d "$workflow" ]; then
-            workflow_name=$(basename "$workflow")
-            workflow_target="$target_dir/$workflow_name"
+    while IFS= read -r workflow_name; do
+        [ -z "$workflow_name" ] && continue
+        local workflow="$source_dir/$workflow_name"
+        local workflow_target="$target_dir/$workflow_name"
 
-            if [ -d "$workflow_target" ]; then
-                rm -rf "$workflow_target"
-                log_info "[$target_name] 更新 workflow: $workflow_name"
-            else
-                log_info "[$target_name] 新增 workflow: $workflow_name"
-            fi
-            cp -r "$workflow" "$target_dir/"
+        if [ ! -d "$workflow" ]; then
+            log_warn "[$target_name] manifest 中的 workflow 不存在，跳过: $workflow_name"
+            continue
         fi
-    done
+
+        if [ -d "$workflow_target" ]; then
+            rm -rf "$workflow_target"
+            log_info "[$target_name] 更新 workflow: $workflow_name"
+        else
+            log_info "[$target_name] 新增 workflow: $workflow_name"
+        fi
+        cp -r "$workflow" "$target_dir/"
+    done < <(read_manifest_entries "$WORKFLOWS_MANIFEST_FILE")
 
     if [ "$PRUNE_MODE" = "on" ]; then
-        prune_removed_dirs "$target_dir" "$source_dir" "$target_name" "workflow"
+        prune_removed_dirs "$target_dir" "$WORKFLOWS_MANIFEST_FILE" "$target_name" "workflow"
     fi
 }
 
@@ -155,7 +220,9 @@ main() {
         exit 1
     fi
 
+    validate_update_target
     select_target
+    validate_update_target
 
     if [ "$PRUNE_MODE" != "on" ] && [ "$PRUNE_MODE" != "off" ]; then
         log_warn "PRUNE_MODE 仅支持 on/off，当前为 '$PRUNE_MODE'，已自动降级为 off"
@@ -164,11 +231,13 @@ main() {
 
     log_info "获取最新 skills..."
     log_debug "clone source: $REPO_URL"
+    log_debug "clone ref: $SKILLS_REF"
     log_debug "clone target: $TEMP_DIR/skills-repo"
-    git clone --depth 1 "$REPO_URL" "$TEMP_DIR/skills-repo" || {
+    git clone --depth 1 --branch "$SKILLS_REF" "$REPO_URL" "$TEMP_DIR/skills-repo" || {
         log_error "克隆仓库失败"
         exit 1
     }
+    set_manifests
 
     if [ "$UPDATE_TARGET" = "claude" ] || [ "$UPDATE_TARGET" = "both" ]; then
         update_skills_in_dir "$CLAUDE_SKILLS_DIR" "Claude Code"

@@ -4,6 +4,7 @@
 $ErrorActionPreference = "Stop"
 
 $RepoUrl = if ($env:SKILLS_REPO) { $env:SKILLS_REPO } else { "https://github.com/biglone/agent-skills.git" }
+$SkillsRef = if ($env:SKILLS_REF) { $env:SKILLS_REF } else { "main" }
 $ClaudeSkillsDir = Join-Path $env:USERPROFILE ".claude\skills"
 $CodexSkillsDir = Join-Path $env:USERPROFILE ".codex\skills"
 $ClaudeWorkflowsDir = Join-Path $env:USERPROFILE ".claude\workflows"
@@ -11,21 +12,75 @@ $CodexWorkflowsDir = Join-Path $env:USERPROFILE ".codex\workflows"
 $TempDir = Join-Path $env:TEMP "ai-skills-$(Get-Random)"
 $PruneMode = if ($env:PRUNE_MODE) { $env:PRUNE_MODE.ToLower() } else { "off" }  # on/off
 $DebugMode = ($env:DEBUG -eq "1" -or $env:DEBUG -eq "true")
+$Script:SkillsManifest = @()
+$Script:WorkflowsManifest = @()
 
 function Write-Info { param($Message) Write-Host "[INFO] $Message" -ForegroundColor Green }
 function Write-Warn { param($Message) Write-Host "[WARN] $Message" -ForegroundColor Yellow }
 function Write-Err { param($Message) Write-Host "[ERROR] $Message" -ForegroundColor Red }
 function Write-DebugInfo { param($Message) if ($DebugMode) { Write-Host "[DEBUG] $Message" -ForegroundColor Cyan } }
 
-function Prune-RemovedDirs {
-    param($TargetDir, $SourceDir, $TargetName, $ItemLabel)
+function Get-ManifestEntriesFromFile {
+    param([string]$Path)
 
-    if (-not (Test-Path $TargetDir) -or -not (Test-Path $SourceDir)) { return }
+    if (-not (Test-Path $Path)) {
+        throw "manifest 不存在: $Path"
+    }
+
+    $Entries = @()
+    foreach ($Line in (Get-Content -Path $Path -Encoding UTF8)) {
+        $Item = $Line.Trim()
+        if (-not $Item) { continue }
+        if ($Item.StartsWith("#")) { continue }
+        $Entries += $Item
+    }
+    return $Entries
+}
+
+function Set-Manifests {
+    $SkillsManifestFile = Join-Path $TempDir "scripts\manifest\skills.txt"
+    $WorkflowsManifestFile = Join-Path $TempDir "scripts\manifest\workflows.txt"
+
+    $Script:SkillsManifest = Get-ManifestEntriesFromFile -Path $SkillsManifestFile
+    if ($Script:SkillsManifest.Count -eq 0) {
+        throw "skills manifest 为空"
+    }
+
+    if (Test-Path $WorkflowsManifestFile) {
+        $Script:WorkflowsManifest = Get-ManifestEntriesFromFile -Path $WorkflowsManifestFile
+    } else {
+        Write-Warn "workflows manifest 不存在，跳过 workflows 更新"
+        $Script:WorkflowsManifest = @()
+    }
+}
+
+function Test-ManifestContains {
+    param([string[]]$Manifest, [string]$Name)
+    return $Manifest -contains $Name
+}
+
+function Resolve-UpdateTargetFromEnv {
+    if ([string]::IsNullOrWhiteSpace($env:UPDATE_TARGET)) {
+        return $null
+    }
+
+    $Target = $env:UPDATE_TARGET.Trim().ToLowerInvariant()
+    switch ($Target) {
+        "claude" { return "claude" }
+        "codex" { return "codex" }
+        "both" { return "both" }
+        default { throw "UPDATE_TARGET 无效: '$($env:UPDATE_TARGET)'。可选值: claude / codex / both" }
+    }
+}
+
+function Prune-RemovedDirs {
+    param($TargetDir, [string[]]$Manifest, $TargetName, $ItemLabel)
+
+    if (-not (Test-Path $TargetDir)) { return }
 
     Get-ChildItem -Path $TargetDir -Directory | ForEach-Object {
         $Name = $_.Name
-        $SourcePath = Join-Path $SourceDir $Name
-        if (-not (Test-Path $SourcePath)) {
+        if (-not (Test-ManifestContains -Manifest $Manifest -Name $Name)) {
             Remove-Item -Path $_.FullName -Recurse -Force
             Write-Info "[$TargetName] 清理已下线 ${ItemLabel}: $Name"
         }
@@ -33,8 +88,9 @@ function Prune-RemovedDirs {
 }
 
 function Select-Target {
-    if ($env:UPDATE_TARGET) {
-        return $env:UPDATE_TARGET
+    $TargetFromEnv = Resolve-UpdateTargetFromEnv
+    if ($TargetFromEnv) {
+        return $TargetFromEnv
     }
 
     Write-Host ""
@@ -62,21 +118,25 @@ function Update-SkillsInDir {
         New-Item -ItemType Directory -Path $TargetDir -Force | Out-Null
     }
 
-    Get-ChildItem -Path $SourceDir -Directory | ForEach-Object {
-        $SkillName = $_.Name
-        $SkillTarget = Join-Path $TargetDir $SkillName
+    foreach ($SkillName in $Script:SkillsManifest) {
+        $SkillSource = Join-Path $SourceDir $SkillName
+        if (-not (Test-Path $SkillSource)) {
+            Write-Warn "[$TargetName] manifest 中的 skill 不存在，跳过: $SkillName"
+            continue
+        }
 
+        $SkillTarget = Join-Path $TargetDir $SkillName
         if (Test-Path $SkillTarget) {
             Remove-Item -Path $SkillTarget -Recurse -Force
             Write-Info "[$TargetName] 更新: $SkillName"
         } else {
             Write-Info "[$TargetName] 新增: $SkillName"
         }
-        Copy-Item -Path $_.FullName -Destination $TargetDir -Recurse
+        Copy-Item -Path $SkillSource -Destination $TargetDir -Recurse
     }
 
     if ($PruneMode -eq "on") {
-        Prune-RemovedDirs -TargetDir $TargetDir -SourceDir $SourceDir -TargetName $TargetName -ItemLabel "skill"
+        Prune-RemovedDirs -TargetDir $TargetDir -Manifest $Script:SkillsManifest -TargetName $TargetName -ItemLabel "skill"
     }
 }
 
@@ -92,21 +152,30 @@ function Update-WorkflowsInDir {
         New-Item -ItemType Directory -Path $TargetDir -Force | Out-Null
     }
 
-    Get-ChildItem -Path $SourceDir -Directory | ForEach-Object {
-        $WorkflowName = $_.Name
-        $WorkflowTarget = Join-Path $TargetDir $WorkflowName
+    if ($Script:WorkflowsManifest.Count -eq 0) {
+        Write-Warn "workflows manifest 为空，跳过"
+        return
+    }
 
+    foreach ($WorkflowName in $Script:WorkflowsManifest) {
+        $WorkflowSource = Join-Path $SourceDir $WorkflowName
+        if (-not (Test-Path $WorkflowSource)) {
+            Write-Warn "[$TargetName] manifest 中的 workflow 不存在，跳过: $WorkflowName"
+            continue
+        }
+
+        $WorkflowTarget = Join-Path $TargetDir $WorkflowName
         if (Test-Path $WorkflowTarget) {
             Remove-Item -Path $WorkflowTarget -Recurse -Force
             Write-Info "[$TargetName] 更新 workflow: $WorkflowName"
         } else {
             Write-Info "[$TargetName] 新增 workflow: $WorkflowName"
         }
-        Copy-Item -Path $_.FullName -Destination $TargetDir -Recurse
+        Copy-Item -Path $WorkflowSource -Destination $TargetDir -Recurse
     }
 
     if ($PruneMode -eq "on") {
-        Prune-RemovedDirs -TargetDir $TargetDir -SourceDir $SourceDir -TargetName $TargetName -ItemLabel "workflow"
+        Prune-RemovedDirs -TargetDir $TargetDir -Manifest $Script:WorkflowsManifest -TargetName $TargetName -ItemLabel "workflow"
     }
 }
 
@@ -136,15 +205,17 @@ function Main {
 
         Write-Info "获取最新 skills..."
         Write-DebugInfo "clone source: $RepoUrl"
+        Write-DebugInfo "clone ref: $SkillsRef"
         Write-DebugInfo "clone target: $TempDir"
         try {
-            git clone --depth 1 $RepoUrl $TempDir
+            git clone --depth 1 --branch $SkillsRef $RepoUrl $TempDir
         } catch {
             throw "克隆仓库失败"
         }
 
         $SourceDir = Join-Path $TempDir "skills"
         $WorkflowsSourceDir = Join-Path $TempDir "workflows"
+        Set-Manifests
 
         if ($Target -eq "claude" -or $Target -eq "both") {
             Update-SkillsInDir -TargetDir $ClaudeSkillsDir -TargetName "Claude Code" -SourceDir $SourceDir
