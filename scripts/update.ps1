@@ -27,7 +27,7 @@ function Prune-RemovedDirs {
         $SourcePath = Join-Path $SourceDir $Name
         if (-not (Test-Path $SourcePath)) {
             Remove-Item -Path $_.FullName -Recurse -Force
-            Write-Info "[$TargetName] 清理已下线 $ItemLabel: $Name"
+            Write-Info "[$TargetName] 清理已下线 ${ItemLabel}: $Name"
         }
     }
 }
