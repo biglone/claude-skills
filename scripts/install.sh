@@ -20,10 +20,10 @@ CODEX_INSTALLED_REPORT="$TEMP_DIR/codex-installed-skills.txt"
 INSTALL_TARGET="${INSTALL_TARGET:-}"
 
 # 更新模式 (ask, skip, force)
-# ask: 询问用户是否更新已存在的 skill (默认)
+# ask: 询问用户是否更新已存在的 skill
 # skip: 跳过已存在的 skill
-# force: 强制更新所有 skill
-UPDATE_MODE="${UPDATE_MODE:-ask}"
+# force: 强制更新所有 skill (默认)
+UPDATE_MODE="${UPDATE_MODE:-force}"
 DEBUG="${DEBUG:-0}"
 CODEX_AUTO_UPDATE_SETUP="${CODEX_AUTO_UPDATE_SETUP:-on}"   # on/off: 是否自动配置 codex 启动前 skills 更新检查
 CODEX_AUTO_UPDATE_REPO="${CODEX_AUTO_UPDATE_REPO:-}"       # owner/repo，默认根据 SKILLS_REPO 推断

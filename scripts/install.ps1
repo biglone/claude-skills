@@ -18,7 +18,7 @@ $Script:InstalledSkills = @{
 $DebugMode = ($env:DEBUG -eq "1" -or $env:DEBUG -eq "true")
 
 # 更新模式 (ask, skip, force)
-$UpdateMode = if ($env:UPDATE_MODE) { $env:UPDATE_MODE.Trim().ToLowerInvariant() } else { "ask" }
+$UpdateMode = if ($env:UPDATE_MODE) { $env:UPDATE_MODE.Trim().ToLowerInvariant() } else { "force" }
 
 function Write-Info { param($Message) Write-Host "[INFO] $Message" -ForegroundColor Green }
 function Write-Warn { param($Message) Write-Host "[WARN] $Message" -ForegroundColor Yellow }
@@ -36,7 +36,7 @@ function Test-InteractiveSession {
 function Resolve-UpdateMode {
     param([string]$Mode)
 
-    $Normalized = if ([string]::IsNullOrWhiteSpace($Mode)) { "ask" } else { $Mode.Trim().ToLowerInvariant() }
+    $Normalized = if ([string]::IsNullOrWhiteSpace($Mode)) { "force" } else { $Mode.Trim().ToLowerInvariant() }
     if ($Normalized -notin @("ask", "skip", "force")) {
         throw "UPDATE_MODE 无效: '$Mode'。可选值: ask / skip / force"
     }

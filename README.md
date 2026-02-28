@@ -185,9 +185,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https:
 | `DEBUG` | install/update | `1` / `true` | 输出额外调试日志（如 clone 源与目标路径） |
 
 **UPDATE_MODE 说明（install 脚本）：**
-- `ask` (默认): 逐个询问是否更新已存在的 skill
+- `force` (默认): 强制更新所有 skill（同名覆盖，无需逐个确认）
+- `ask`: 逐个询问是否更新已存在的 skill
 - `skip`: 跳过所有已存在的 skill
-- `force`: 强制更新所有 skill
 
 **PRUNE_MODE 说明（update 脚本）：**
 - `off` (默认): 只更新/新增，不删除本地多余目录
