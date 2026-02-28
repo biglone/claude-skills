@@ -11,7 +11,7 @@ CLAUDE_WORKFLOWS_DIR="$HOME/.claude/workflows"
 CODEX_WORKFLOWS_DIR="$HOME/.codex/workflows"
 
 UNINSTALL_TARGET="${UNINSTALL_TARGET:-}"
-MANIFEST_BASE_URL="${MANIFEST_BASE_URL:-https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/manifest}"
+MANIFEST_BASE_URL="${MANIFEST_BASE_URL:-https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/manifest}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'

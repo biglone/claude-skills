@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-REPO_URL="${SKILLS_REPO:-https://github.com/biglone/claude-skills.git}"
+REPO_URL="${SKILLS_REPO:-https://github.com/biglone/agent-skills.git}"
 CLAUDE_SKILLS_DIR="$HOME/.claude/skills"
 CODEX_SKILLS_DIR="$HOME/.codex/skills"
 CLAUDE_WORKFLOWS_DIR="$HOME/.claude/workflows"

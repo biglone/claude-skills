@@ -709,4 +709,4 @@ npm run lint
 - [快速开始指南](./GETTING_STARTED.md)
 - [故障排除](./TROUBLESHOOTING.md)
 - [性能优化](./PERFORMANCE.md)
-- [GitHub 示例配置](https://github.com/biglone/claude-skills/tree/main/examples/configs)
+- [GitHub 示例配置](https://github.com/biglone/agent-skills/tree/main/examples/configs)

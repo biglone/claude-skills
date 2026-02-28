@@ -3,7 +3,7 @@
 
 $ErrorActionPreference = "Stop"
 
-$RepoUrl = if ($env:SKILLS_REPO) { $env:SKILLS_REPO } else { "https://github.com/biglone/claude-skills.git" }
+$RepoUrl = if ($env:SKILLS_REPO) { $env:SKILLS_REPO } else { "https://github.com/biglone/agent-skills.git" }
 $ClaudeSkillsDir = Join-Path $env:USERPROFILE ".claude\skills"
 $CodexSkillsDir = Join-Path $env:USERPROFILE ".codex\skills"
 $ClaudeWorkflowsDir = Join-Path $env:USERPROFILE ".claude\workflows"

@@ -150,19 +150,19 @@
 ### macOS / Linux
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.sh | bash
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
-irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.ps1 | iex
 ```
 
 ### Windows (cmd)
 
 ```cmd
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | Invoke-Expression"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.ps1 | Invoke-Expression"
 ```
 
 说明：`irm` 是 PowerShell 的 `Invoke-RestMethod` 别名，在 `cmd` 中不可直接使用。
@@ -201,31 +201,31 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https:
 **macOS / Linux:**
 ```bash
 # 强制更新所有 skills 到 Claude Code
-curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | UPDATE_MODE=force INSTALL_TARGET=claude bash
+curl -fsSL https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.sh | UPDATE_MODE=force INSTALL_TARGET=claude bash
 
 # 强制更新到两个平台
-curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | UPDATE_MODE=force INSTALL_TARGET=both bash
+curl -fsSL https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.sh | UPDATE_MODE=force INSTALL_TARGET=both bash
 
 # 跳过已存在的 skills（静默安装）
-curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | UPDATE_MODE=skip INSTALL_TARGET=both bash
+curl -fsSL https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.sh | UPDATE_MODE=skip INSTALL_TARGET=both bash
 ```
 
 **Windows (PowerShell):**
 ```powershell
 # 只安装到 Claude Code
-$env:INSTALL_TARGET="claude"; irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
+$env:INSTALL_TARGET="claude"; irm https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.ps1 | iex
 
 # 强制更新所有 skills
-$env:UPDATE_MODE="force"; irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
+$env:UPDATE_MODE="force"; irm https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.ps1 | iex
 ```
 
 **Windows (cmd):**
 ```cmd
 :: 只安装到 Claude Code
-set "INSTALL_TARGET=claude" && powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | Invoke-Expression"
+set "INSTALL_TARGET=claude" && powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.ps1 | Invoke-Expression"
 
 :: 强制更新所有 skills
-set "UPDATE_MODE=force" && powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | Invoke-Expression"
+set "UPDATE_MODE=force" && powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.ps1 | Invoke-Expression"
 ```
 
 ### Codex 启动前自动更新（macOS / Linux）
@@ -243,24 +243,24 @@ set "UPDATE_MODE=force" && powershell -NoProfile -ExecutionPolicy Bypass -Comman
 
 **macOS / Linux:**
 ```bash
-git clone https://github.com/biglone/claude-skills.git
+git clone https://github.com/biglone/agent-skills.git
 
 # Claude Code
-cp -r claude-skills/skills/* ~/.claude/skills/
+cp -r agent-skills/skills/* ~/.claude/skills/
 
 # Codex CLI
-cp -r claude-skills/skills/* ~/.codex/skills/
+cp -r agent-skills/skills/* ~/.codex/skills/
 ```
 
 **Windows:**
 ```powershell
-git clone https://github.com/biglone/claude-skills.git
+git clone https://github.com/biglone/agent-skills.git
 
 # Claude Code
-Copy-Item -Recurse claude-skills\skills\* $env:USERPROFILE\.claude\skills\
+Copy-Item -Recurse agent-skills\skills\* $env:USERPROFILE\.claude\skills\
 
 # Codex CLI
-Copy-Item -Recurse claude-skills\skills\* $env:USERPROFILE\.codex\skills\
+Copy-Item -Recurse agent-skills\skills\* $env:USERPROFILE\.codex\skills\
 ```
 
 ## 更新 Skills
@@ -269,40 +269,40 @@ Copy-Item -Recurse claude-skills\skills\* $env:USERPROFILE\.codex\skills\
 
 **macOS / Linux:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/update.sh | bash
+curl -fsSL https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/update.sh | bash
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/update.ps1 | iex
+irm https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/update.ps1 | iex
 ```
 
 **Windows (cmd):**
 ```cmd
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/update.ps1 | Invoke-Expression"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/update.ps1 | Invoke-Expression"
 ```
 
 ## 卸载 Skills
 
 **macOS / Linux:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/uninstall.sh | bash
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/uninstall.ps1 | iex
+irm https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/uninstall.ps1 | iex
 ```
 
 **Windows (cmd):**
 ```cmd
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/uninstall.ps1 | Invoke-Expression"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/uninstall.ps1 | Invoke-Expression"
 ```
 
 ## 目录结构
 
 ```
-claude-skills/
+agent-skills/
 ├── README.md
 ├── skills/                     # Skills 目录
 │   ├── code-reviewer/

@@ -19,17 +19,17 @@
 
 **macOS / Linux:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.ps1 | iex
 ```
 
 **Windows (cmd):**
 ```cmd
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/claude-skills/main/scripts/install.ps1 | Invoke-Expression"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https://raw.githubusercontent.com/biglone/agent-skills/main/scripts/install.ps1 | Invoke-Expression"
 ```
 
 说明：`irm` 是 PowerShell 命令别名，在 `cmd` 里不能直接执行。
@@ -37,8 +37,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-RestMethod https:
 ### 方式 2：手动安装
 
 ```bash
-git clone https://github.com/biglone/claude-skills.git
-cd claude-skills
+git clone https://github.com/biglone/agent-skills.git
+cd agent-skills
 
 # Claude Code
 cp -r skills/* ~/.claude/skills/

@@ -28,8 +28,8 @@ export https_proxy=http://your-proxy:port
 curl -fsSL https://raw.githubusercontent.com/.../install.sh | bash
 
 # 方式 2：手动下载
-git clone https://github.com/biglone/claude-skills.git
-cd claude-skills
+git clone https://github.com/biglone/agent-skills.git
+cd agent-skills
 cp -r skills/* ~/.claude/skills/
 ```
 
@@ -298,7 +298,7 @@ npm install
 # 运行诊断脚本
 cat > diagnose.sh << 'SCRIPT'
 #!/bin/bash
-echo "=== Claude Skills 诊断信息 ==="
+echo "=== Agent Skills 诊断信息 ==="
 echo "当前目录: $(pwd)"
 echo "Git 状态:"
 git status --short || echo "不是 Git 仓库"
@@ -336,7 +336,7 @@ chmod +x diagnose.sh
 
 ### 社区支持
 
-- GitHub Issues: https://github.com/biglone/claude-skills/issues
+- GitHub Issues: https://github.com/biglone/agent-skills/issues
 - 提供诊断信息和日志
 - 描述复现步骤
 
