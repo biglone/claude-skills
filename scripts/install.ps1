@@ -203,7 +203,8 @@ function Show-Installed {
         if (Test-Path $SkillFile) {
             Write-Host "  • $SkillName" -ForegroundColor White
 
-            $Content = Get-Content $SkillFile -Raw
+            # SKILL.md 使用 UTF-8，Windows PowerShell 5.1 默认读取编码会导致中文乱码
+            $Content = Get-Content $SkillFile -Raw -Encoding UTF8
             if ($Content -match 'description:\s*(.+)') {
                 $Desc = $Matches[1].Trim()
                 Write-Host "    $Desc" -ForegroundColor Gray
